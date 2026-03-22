@@ -411,6 +411,68 @@ html, body {
   accent-color: var(--accent);
 }
 
+/* ===== Save Button ===== */
+#save-btn {
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#save-btn:hover {
+  background: var(--border);
+}
+
+/* ===== Night Blackout ===== */
+#blackout {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 20;
+  cursor: pointer;
+}
+
+.blackout-enable {
+  margin-bottom: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.blackout-times .time-row {
+  display: flex;
+  gap: 12px;
+}
+
+.blackout-times .field-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.blackout-times .field-group input {
+  font-family: var(--font);
+}
+
 /* ===== Utility ===== */
 .hidden {
   display: none !important;

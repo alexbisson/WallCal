@@ -48,6 +48,28 @@
     </section>
 
     <section class="settings-section">
+      <h3>Night Blackout</h3>
+      <div class="blackout-enable">
+        <label class="checkbox-label">
+          <input type="checkbox" id="blackout-enabled">
+          Black out screen
+        </label>
+      </div>
+      <div id="blackout-times" class="blackout-times hidden">
+        <div class="time-row">
+          <div class="field-group">
+            <label for="blackout-from">From</label>
+            <input type="text" id="blackout-from" placeholder="HH:MM" maxlength="5" inputmode="numeric">
+          </div>
+          <div class="field-group">
+            <label for="blackout-to">To</label>
+            <input type="text" id="blackout-to" placeholder="HH:MM" maxlength="5" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-section">
       <h3>Weather <span class="coming-soon">Coming soon</span></h3>
       <div class="field-group">
         <label for="city-input">City</label>
@@ -59,7 +81,14 @@
         >
       </div>
     </section>
+
+    <section class="settings-section">
+      <button id="save-btn">Save settings</button>
+      <p id="save-message" class="settings-message" aria-live="polite"></p>
+    </section>
   </aside>
+
+  <div id="blackout" class="hidden" title="Click to open settings"></div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="auth.js"></script>

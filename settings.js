@@ -1,15 +1,18 @@
 'use strict';
 
-// Settings module — cog panel, OAuth connect, calendar toggles.
+// Settings module — cog panel, OAuth connect, calendar toggles, night blackout.
 // Depends on: Auth, Api, Calendar
 // Exposes: init(), loadCalendarList()
 const Settings = (() => {
+  const BLACKOUT_KEY = 'wallcal_blackout';
   let isOpen = false;
 
   // ── Panel open / close ────────────────────────────────────────────────────
 
   function open() {
     isOpen = true;
+    // Hide blackout while settings is open so controls remain accessible.
+    document.getElementById('blackout').classList.add('hidden');
     document.getElementById('settings-panel').classList.remove('hidden');
     document.getElementById('settings-overlay').classList.remove('hidden');
 
@@ -25,6 +28,8 @@ const Settings = (() => {
     isOpen = false;
     document.getElementById('settings-panel').classList.add('hidden');
     document.getElementById('settings-overlay').classList.add('hidden');
+    // Re-evaluate blackout after settings closes.
+    _applyBlackout();
   }
 
   function toggle() {
@@ -129,6 +134,84 @@ const Settings = (() => {
     Calendar.refresh();
   }
 
+  // ── Night Blackout ────────────────────────────────────────────────────────
+
+  function _loadBlackoutSettings() {
+    try {
+      return JSON.parse(localStorage.getItem(BLACKOUT_KEY)) || {};
+    } catch (_) { return {}; }
+  }
+
+  function _saveBlackoutSettings(settings) {
+    localStorage.setItem(BLACKOUT_KEY, JSON.stringify(settings));
+  }
+
+  function _currentTimeStr() {
+    const now = new Date();
+    return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  }
+
+  function _isInBlackoutWindow(from, to) {
+    const now = _currentTimeStr();
+    // Handle ranges that span midnight (e.g. 22:00–06:00).
+    return from <= to ? (now >= from && now < to) : (now >= from || now < to);
+  }
+
+  function _applyBlackout() {
+    if (isOpen) return; // Never cover the settings panel.
+    const { enabled, from, to } = _loadBlackoutSettings();
+    const active = enabled && from && to && _isInBlackoutWindow(from, to);
+    document.getElementById('blackout').classList.toggle('hidden', !active);
+  }
+
+  function _initBlackoutControls() {
+    const { enabled, from, to } = _loadBlackoutSettings();
+    const checkbox = document.getElementById('blackout-enabled');
+    const timesDiv = document.getElementById('blackout-times');
+
+    checkbox.checked = !!enabled;
+    if (from) document.getElementById('blackout-from').value = from;
+    if (to)   document.getElementById('blackout-to').value   = to;
+    timesDiv.classList.toggle('hidden', !enabled);
+
+    // Only toggle the time-input row — actual saving happens via the Save button.
+    checkbox.addEventListener('change', () => {
+      timesDiv.classList.toggle('hidden', !checkbox.checked);
+    });
+  }
+
+  function _showSaveMessage(msg, type = '') {
+    const el = document.getElementById('save-message');
+    el.textContent = msg;
+    el.className = 'settings-message' + (type ? ` ${type}` : '');
+  }
+
+  function _handleSave() {
+    const enabled = document.getElementById('blackout-enabled').checked;
+    const from    = document.getElementById('blackout-from').value.trim();
+    const to      = document.getElementById('blackout-to').value.trim();
+    const timeRe  = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+    if (enabled) {
+      if (!from || !to) {
+        _showSaveMessage('Enter both From and To times.', 'error');
+        return;
+      }
+      if (!timeRe.test(from) || !timeRe.test(to)) {
+        _showSaveMessage('Use HH:MM format (e.g. 22:00).', 'error');
+        return;
+      }
+      if (from >= to) {
+        _showSaveMessage('From must be earlier than To.', 'error');
+        return;
+      }
+    }
+
+    _saveBlackoutSettings({ enabled, from, to });
+    _showSaveMessage('Settings saved.', 'success');
+    _applyBlackout();
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────
 
   function init() {
@@ -136,6 +219,11 @@ const Settings = (() => {
     document.getElementById('settings-close').addEventListener('click', close);
     document.getElementById('settings-overlay').addEventListener('click', close);
     document.getElementById('connect-btn').addEventListener('click', _handleConnect);
+    document.getElementById('save-btn').addEventListener('click', _handleSave);
+    document.getElementById('blackout').addEventListener('click', open);
+
+    _initBlackoutControls();
+    _applyBlackout();
 
     // Kick off the initial calendar render.
     if (Auth.getClientId()) {
@@ -146,6 +234,8 @@ const Settings = (() => {
 
     // Auto-refresh every 10 minutes.
     setInterval(Calendar.refresh, 10 * 60 * 1000);
+    // Re-check blackout every minute.
+    setInterval(_applyBlackout, 60 * 1000);
   }
 
   return { init, loadCalendarList };
