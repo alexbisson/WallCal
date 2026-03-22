@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WallCal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header id="app-header">
+      <span id="month-label"></span>
+      <button id="settings-btn" aria-label="Settings" title="Settings">⚙</button>
+    </header>
+    <main id="calendar-grid" aria-label="Calendar"></main>
+    <footer id="status-bar"></footer>
+  </div>
+
+  <div id="settings-overlay" class="hidden"></div>
+
+  <aside id="settings-panel" class="hidden" aria-label="Settings panel">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button id="settings-close" aria-label="Close settings">✕</button>
+    </div>
+
+    <section class="settings-section">
+      <h3>Google Calendar</h3>
+      <div class="field-group">
+        <label for="client-id-input">OAuth Client ID</label>
+        <input
+          type="text"
+          id="client-id-input"
+          placeholder="*.apps.googleusercontent.com"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+      <button id="connect-btn">Connect Google Calendar</button>
+      <p id="settings-message" class="settings-message" aria-live="polite"></p>
+    </section>
+
+    <section class="settings-section">
+      <h3>Calendars</h3>
+      <div id="calendar-list">
+        <p class="settings-hint">Connect Google Calendar to see your calendars.</p>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h3>Weather <span class="coming-soon">Coming soon</span></h3>
+      <div class="field-group">
+        <label for="city-input">City</label>
+        <input
+          type="text"
+          id="city-input"
+          placeholder="e.g., San Francisco"
+          disabled
+        >
+      </div>
+    </section>
+  </aside>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js"></script>
+  <script src="api.js"></script>
+  <script src="calendar.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
