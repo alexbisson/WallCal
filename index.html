@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WallCal</title>
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Apply saved theme before first paint to avoid flash.
+    (function () {
+      var t = localStorage.getItem('wallcal_theme');
+      if (t && t !== 'auto') document.documentElement.setAttribute('data-theme', t);
+      // 'auto' is resolved after scripts load; dark CSS default handles initial render.
+    }());
+  </script>
 </head>
 <body>
   <div id="app">
@@ -45,6 +53,25 @@
       <div id="calendar-list">
         <p class="settings-hint">Connect Google Calendar to see your calendars.</p>
       </div>
+    </section>
+
+    <section class="settings-section">
+      <h3>Appearance</h3>
+      <div class="theme-options">
+        <div class="theme-option">
+          <input type="radio" name="theme" id="theme-light" value="light">
+          <label for="theme-light">Light</label>
+        </div>
+        <div class="theme-option">
+          <input type="radio" name="theme" id="theme-dark" value="dark">
+          <label for="theme-dark">Dark</label>
+        </div>
+        <div class="theme-option">
+          <input type="radio" name="theme" id="theme-auto" value="auto">
+          <label for="theme-auto">Auto</label>
+        </div>
+      </div>
+      <p id="theme-hint" class="settings-hint theme-hint hidden"></p>
     </section>
 
     <section class="settings-section">
