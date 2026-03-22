@@ -5,6 +5,7 @@
 // Exposes: refresh(), showUnauthenticated(), getWindow()
 const Calendar = (() => {
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MONTH_EMOJI = ['❄️', '❤️', '🌱', '🌸', '🌼', '☀️', '🏖️', '🌻', '🍂', '🎃', '🍁', '🎄'];
   const MAX_VISIBLE = 3; // event chips shown per cell before overflow indicator
 
   // ── Date helpers ──────────────────────────────────────────────────────────
@@ -65,11 +66,8 @@ const Calendar = (() => {
           ...event,
           _isAllDay: false,
           _sortKey: '1' + event.start.dateTime, // timed sorts after all-day
-          _timeStr: startDate.toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          }),
+          _timeStr: String(startDate.getHours()).padStart(2, '0') + ':'
+                  + String(startDate.getMinutes()).padStart(2, '0'),
         });
       }
     }
@@ -97,11 +95,19 @@ const Calendar = (() => {
 
   function _buildEventChip(event) {
     const chip = document.createElement('div');
-    chip.className = 'event-chip' + (event._isAllDay ? ' all-day' : '');
-    chip.style.backgroundColor = event._bgColor;
-    chip.style.color = event._fgColor;
 
-    if (!event._isAllDay && event._timeStr) {
+    if (event._isAllDay) {
+      chip.className = 'event-chip all-day';
+      chip.style.backgroundColor = event._bgColor;
+      chip.style.color = event._fgColor;
+    } else {
+      chip.className = 'event-chip timed';
+
+      const dot = document.createElement('span');
+      dot.className = 'event-dot';
+      dot.style.backgroundColor = event._bgColor;
+      chip.appendChild(dot);
+
       const timeSpan = document.createElement('span');
       timeSpan.className = 'event-time';
       timeSpan.textContent = event._timeStr;
@@ -122,6 +128,7 @@ const Calendar = (() => {
     cell.className = 'day-cell';
     if (date.getDay() === 0) cell.classList.add('sunday');
     if (key === todayKey)    cell.classList.add('today');
+    if (key < todayKey)      cell.classList.add('past');
 
     const dateNum = document.createElement('span');
     dateNum.className = 'date-number';
@@ -183,15 +190,17 @@ const Calendar = (() => {
     const sameYear  = start.getFullYear() === lastDay.getFullYear();
     const sameMonth = sameYear && start.getMonth() === lastDay.getMonth();
 
+    const emoji = MONTH_EMOJI[start.getMonth()];
+
     if (sameMonth) {
-      label.textContent = start.toLocaleString('default', { month: 'long', year: 'numeric' });
+      label.textContent = emoji + ' ' + start.toLocaleString('default', { month: 'long', year: 'numeric' });
     } else if (sameYear) {
-      label.textContent =
+      label.textContent = emoji + ' ' +
         start.toLocaleString('default', { month: 'long' }) +
         ' – ' +
         lastDay.toLocaleString('default', { month: 'long', year: 'numeric' });
     } else {
-      label.textContent =
+      label.textContent = emoji + ' ' +
         start.toLocaleString('default', { month: 'long', year: 'numeric' }) +
         ' – ' +
         lastDay.toLocaleString('default', { month: 'long', year: 'numeric' });

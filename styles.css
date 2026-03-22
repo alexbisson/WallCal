@@ -94,6 +94,7 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-size: 14px; /* JS-controlled base; children use em so they scale with it */
 }
 
 /* Day-of-week header row */
@@ -107,7 +108,7 @@ html, body {
 .header-cell {
   padding: 5px 8px;
   text-align: center;
-  font-size: 0.7rem;
+  font-size: 0.7em;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -154,8 +155,12 @@ html, body {
   background: var(--today-bg);
 }
 
+.day-cell.past .event-chip {
+  opacity: 0.30;
+}
+
 .date-number {
-  font-size: 0.78rem;
+  font-size: 0.78em;
   font-weight: 500;
   color: var(--text-muted);
   width: 22px;
@@ -187,7 +192,7 @@ html, body {
   gap: 3px;
   padding: 1px 5px;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.72em;
   line-height: 1.45;
   overflow: hidden;
   flex-shrink: 0;
@@ -198,10 +203,23 @@ html, body {
   font-weight: 500;
 }
 
+.event-chip.timed {
+  background: none;
+  padding-left: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.event-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .event-time {
   opacity: 0.85;
   flex-shrink: 0;
-  font-size: 0.67rem;
   white-space: nowrap;
 }
 
@@ -212,7 +230,7 @@ html, body {
 }
 
 .overflow-indicator {
-  font-size: 0.67rem;
+  font-size: 0.67em;
   color: var(--text-muted);
   padding: 1px 5px;
   cursor: default;
@@ -226,7 +244,7 @@ html, body {
   justify-content: center;
   height: 100%;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1em;
   text-align: center;
   padding: 2rem;
 }
@@ -414,6 +432,41 @@ html, body {
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
+}
+
+/* ===== Font Size Control ===== */
+.font-size-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.font-size-control button {
+  width: 30px;
+  height: 30px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.font-size-control button:hover {
+  background: var(--border);
+}
+
+#font-size-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: center;
 }
 
 /* ===== Theme Radio Buttons ===== */

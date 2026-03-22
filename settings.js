@@ -4,9 +4,13 @@
 // Depends on: Auth, Api, Calendar
 // Exposes: init(), loadCalendarList()
 const Settings = (() => {
-  const BLACKOUT_KEY  = 'wallcal_blackout';
-  const THEME_KEY     = 'wallcal_theme';
-  const LOCATION_KEY  = 'wallcal_location';
+  const BLACKOUT_KEY   = 'wallcal_blackout';
+  const THEME_KEY      = 'wallcal_theme';
+  const LOCATION_KEY   = 'wallcal_location';
+  const FONTSIZE_KEY   = 'wallcal_fontsize';
+  const FONT_DEFAULT   = 14;
+  const FONT_MIN       = 10;
+  const FONT_MAX       = 22;
   let isOpen = false;
 
   // ── Panel open / close ────────────────────────────────────────────────────
@@ -214,6 +218,35 @@ const Settings = (() => {
     _applyBlackout();
   }
 
+  // ── Font Size ─────────────────────────────────────────────────────────────
+
+  function _initFontSizeControls() {
+    let size = parseInt(localStorage.getItem(FONTSIZE_KEY), 10) || FONT_DEFAULT;
+
+    function apply() {
+      document.getElementById('calendar-grid').style.fontSize = size + 'px';
+      document.getElementById('font-size-label').textContent = size + 'px';
+      document.getElementById('font-decrease').disabled = size <= FONT_MIN;
+      document.getElementById('font-increase').disabled = size >= FONT_MAX;
+    }
+
+    apply();
+
+    document.getElementById('font-decrease').addEventListener('click', () => {
+      if (size <= FONT_MIN) return;
+      size -= 1;
+      localStorage.setItem(FONTSIZE_KEY, size);
+      apply();
+    });
+
+    document.getElementById('font-increase').addEventListener('click', () => {
+      if (size >= FONT_MAX) return;
+      size += 1;
+      localStorage.setItem(FONTSIZE_KEY, size);
+      apply();
+    });
+  }
+
   // ── Appearance / Theme ────────────────────────────────────────────────────
 
   function _loadTheme() {
@@ -339,6 +372,7 @@ const Settings = (() => {
     document.getElementById('save-btn').addEventListener('click', _handleSave);
     document.getElementById('blackout').addEventListener('click', open);
 
+    _initFontSizeControls();
     _initThemeControls();
     _applyTheme();
     _initBlackoutControls();
