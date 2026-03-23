@@ -1,14 +1,18 @@
 'use strict';
 
-// Api module — all Google Calendar REST API calls.
+// Api module — all Google Calendar + Tasks REST API calls, and Open-Meteo weather.
 // Depends on: Auth
-// Exposes: fetchCalendars(), fetchColors(), fetchAllEvents(calendars, timeMin, timeMax, eventColorMap)
+// Exposes: fetchCalendars(), fetchColors(), fetchAllEvents(...), fetchTaskLists(),
+//          fetchTasks(listId), fetchWeather(lat, lng)
 const Api = (() => {
-  const BASE = 'https://www.googleapis.com/calendar/v3';
+  const CAL_BASE   = 'https://www.googleapis.com/calendar/v3';
+  const TASKS_BASE = 'https://www.googleapis.com/tasks/v1';
+  // Keep BASE as an alias so existing internal calls are unchanged.
+  const BASE = CAL_BASE;
 
   // ── Core fetch helper ─────────────────────────────────────────────────────
 
-  async function _apiFetch(path, params = {}) {
+  async function _apiFetch(path, params = {}, base = BASE) {
     const token = await Auth.getToken();
     if (!token) {
       const err = new Error('not_authenticated');
@@ -16,7 +20,7 @@ const Api = (() => {
       throw err;
     }
 
-    const url = new URL(`${BASE}${path}`);
+    const url = new URL(`${base}${path}`);
     for (const [k, v] of Object.entries(params)) {
       url.searchParams.set(k, String(v));
     }
@@ -106,5 +110,36 @@ const Api = (() => {
       .flatMap((r) => r.value);
   }
 
-  return { fetchCalendars, fetchColors, fetchAllEvents };
+  // ── Tasks API ─────────────────────────────────────────────────────────────
+
+  async function fetchTaskLists() {
+    const data = await _apiFetch('/users/@me/lists', {}, TASKS_BASE);
+    return data.items || [];
+  }
+
+  async function fetchTasks(listId) {
+    const data = await _apiFetch(
+      `/lists/${encodeURIComponent(listId)}/tasks`,
+      { showCompleted: 'false', showHidden: 'false', maxResults: '30' },
+      TASKS_BASE,
+    );
+    return data.items || [];
+  }
+
+  // ── Weather API (Open-Meteo — no key required) ────────────────────────────
+
+  async function fetchWeather(lat, lng) {
+    const url = new URL('https://api.open-meteo.com/v1/forecast');
+    url.searchParams.set('latitude',      String(lat));
+    url.searchParams.set('longitude',     String(lng));
+    url.searchParams.set('current_weather', 'true');
+    url.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,precipitation_sum');
+    url.searchParams.set('timezone',      'auto');
+    url.searchParams.set('forecast_days', '1');
+    const resp = await fetch(url.toString());
+    if (!resp.ok) throw new Error(`Weather API ${resp.status}`);
+    return resp.json();
+  }
+
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchWeather };
 })();

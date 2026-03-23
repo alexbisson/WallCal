@@ -15,13 +15,27 @@
   </script>
 </head>
 <body>
-  <div id="app">
+  <div id="root">
+    <aside id="left-panel">
+      <div id="panel-clock">
+        <div id="panel-time"></div>
+        <div id="panel-date"></div>
+      </div>
+      <div id="panel-weather" class="panel-card hidden"></div>
+      <div id="panel-tasks" class="panel-card hidden">
+        <h2 class="panel-section-title">Reminders</h2>
+        <ul id="panel-tasks-list"></ul>
+      </div>
+    </aside>
+
+    <div id="app">
     <header id="app-header">
       <span id="month-label"></span>
       <button id="settings-btn" aria-label="Settings" title="Settings">⚙</button>
     </header>
     <main id="calendar-grid" aria-label="Calendar"></main>
     <footer id="status-bar"></footer>
+    </div>
   </div>
 
   <div id="settings-overlay" class="hidden"></div>
@@ -33,7 +47,7 @@
     </div>
 
     <section class="settings-section">
-      <h3>Google Calendar</h3>
+      <h3>Google</h3>
       <div class="field-group">
         <label for="client-id-input">OAuth Client ID</label>
         <input
@@ -44,8 +58,11 @@
           spellcheck="false"
         >
       </div>
-      <button id="connect-btn">Connect Google Calendar</button>
+      <button id="connect-btn">Connect Google</button>
       <p id="settings-message" class="settings-message" aria-live="polite"></p>
+      <div id="task-list-container" class="field-group" style="margin-top:10px">
+        <p class="settings-hint">Connect to see your task lists.</p>
+      </div>
     </section>
 
     <section class="settings-section">
@@ -106,16 +123,9 @@
     </section>
 
     <section class="settings-section">
-      <h3>Weather <span class="coming-soon">Coming soon</span></h3>
-      <div class="field-group">
-        <label for="city-input">City</label>
-        <input
-          type="text"
-          id="city-input"
-          placeholder="e.g., San Francisco"
-          disabled
-        >
-      </div>
+      <h3>Weather</h3>
+      <p id="weather-location-hint" class="settings-hint"></p>
+      <button id="grant-location-btn" class="secondary-btn hidden">Grant location access</button>
     </section>
 
     <section class="settings-section">
@@ -130,6 +140,7 @@
   <script src="auth.js"></script>
   <script src="api.js"></script>
   <script src="calendar.js"></script>
+  <script src="panel.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

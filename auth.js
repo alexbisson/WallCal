@@ -3,7 +3,7 @@
 // Auth module — OAuth flow, token storage, silent re-auth.
 // Exposes: getToken(), connect(clientId), getClientId(), setClientId(id), clearToken()
 const Auth = (() => {
-  const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+  const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks.readonly';
   const CLIENT_ID_KEY = 'wallcal_client_id';
 
   let tokenClient = null;

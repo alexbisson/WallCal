@@ -8,6 +8,7 @@ const Settings = (() => {
   const THEME_KEY      = 'wallcal_theme';
   const LOCATION_KEY   = 'wallcal_location';
   const FONTSIZE_KEY   = 'wallcal_fontsize';
+  const TASKS_LIST_KEY = 'wallcal_tasks_list';
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
@@ -26,8 +27,9 @@ const Settings = (() => {
     const stored = Auth.getClientId();
     if (stored) document.getElementById('client-id-input').value = stored;
 
-    // Load calendar list if we already have a token.
+    // Load calendar and task lists if we already have a token.
     loadCalendarList();
+    loadTaskListOptions();
   }
 
   function close() {
@@ -59,15 +61,16 @@ const Settings = (() => {
     try {
       await Auth.connect(clientId);
       _showMessage('Connected successfully.', 'success');
-      btn.textContent = 'Reconnect Google Calendar';
+      btn.textContent = 'Reconnect Google';
       btn.disabled = false;
 
-      // Refresh the main view and populate the calendar list.
+      // Refresh the main view and populate the calendar and task lists.
       Calendar.refresh();
       loadCalendarList();
+      loadTaskListOptions();
     } catch (err) {
       _showMessage(`Connection failed: ${err.message}`, 'error');
-      btn.textContent = 'Connect Google Calendar';
+      btn.textContent = 'Connect Google';
       btn.disabled = false;
     }
   }
@@ -138,6 +141,94 @@ const Settings = (() => {
     }
     localStorage.setItem('wallcal_hidden', JSON.stringify(hidden));
     Calendar.refresh();
+  }
+
+  // ── Task list selector ────────────────────────────────────────────────────
+
+  async function loadTaskListOptions() {
+    const container = document.getElementById('task-list-container');
+    const token = await Auth.getToken();
+    if (!token) return;
+
+    try {
+      const lists = await Api.fetchTaskLists();
+      if (lists.length === 0) {
+        container.innerHTML = '<p class="settings-hint">No task lists found.</p>';
+        return;
+      }
+
+      const saved = localStorage.getItem(TASKS_LIST_KEY) || '';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'field-group';
+
+      const label = document.createElement('label');
+      label.htmlFor = 'task-list-select';
+      label.textContent = 'Show list';
+
+      const select = document.createElement('select');
+      select.id = 'task-list-select';
+      select.className = 'settings-select';
+
+      const none = document.createElement('option');
+      none.value = '';
+      none.textContent = '— None —';
+      none.selected = !saved;
+      select.appendChild(none);
+
+      for (const list of lists) {
+        const opt = document.createElement('option');
+        opt.value = list.id;
+        opt.textContent = list.title;
+        opt.selected = list.id === saved;
+        select.appendChild(opt);
+      }
+
+      select.addEventListener('change', () => {
+        if (select.value) {
+          localStorage.setItem(TASKS_LIST_KEY, select.value);
+        } else {
+          localStorage.removeItem(TASKS_LIST_KEY);
+        }
+        Panel.refreshTasks();
+      });
+
+      wrap.append(label, select);
+      container.innerHTML = '';
+      container.appendChild(wrap);
+    } catch (_) {
+      // Not critical — repopulates on next open.
+    }
+  }
+
+  // ── Weather location ──────────────────────────────────────────────────────
+
+  function _initWeatherControls() {
+    const hint = document.getElementById('weather-location-hint');
+    const btn  = document.getElementById('grant-location-btn');
+    const cached = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
+
+    if (cached) {
+      hint.textContent = 'Location access granted. Weather shows in the left panel.';
+    } else {
+      hint.textContent = 'Grant location access to show weather in the left panel.';
+      btn.classList.remove('hidden');
+    }
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Requesting…';
+      try {
+        await _getLocation();
+        hint.textContent = 'Location access granted. Weather shows in the left panel.';
+        btn.classList.add('hidden');
+        Panel.refreshWeather();
+      } catch (_) {
+        hint.textContent = 'Location access denied.';
+        btn.disabled = false;
+        btn.textContent = 'Grant location access';
+      }
+    });
   }
 
   // ── Night Blackout ────────────────────────────────────────────────────────
@@ -225,6 +316,7 @@ const Settings = (() => {
 
     function apply() {
       document.getElementById('calendar-grid').style.fontSize = size + 'px';
+      document.getElementById('panel-tasks').style.fontSize = size + 'px';
       document.getElementById('font-size-label').textContent = size + 'px';
       document.getElementById('font-decrease').disabled = size <= FONT_MIN;
       document.getElementById('font-increase').disabled = size >= FONT_MAX;
@@ -377,6 +469,7 @@ const Settings = (() => {
     _applyTheme();
     _initBlackoutControls();
     _applyBlackout();
+    _initWeatherControls();
 
     // Kick off the initial calendar render.
     if (Auth.getClientId()) {
@@ -391,7 +484,7 @@ const Settings = (() => {
     setInterval(() => { _applyTheme(); _applyBlackout(); }, 60 * 1000);
   }
 
-  return { init, loadCalendarList };
+  return { init, loadCalendarList, loadTaskListOptions };
 })();
 
 // Boot.
