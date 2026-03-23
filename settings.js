@@ -4,11 +4,12 @@
 // Depends on: Auth, Api, Calendar
 // Exposes: init(), loadCalendarList()
 const Settings = (() => {
-  const BLACKOUT_KEY   = 'wallcal_blackout';
-  const THEME_KEY      = 'wallcal_theme';
-  const LOCATION_KEY   = 'wallcal_location';
-  const FONTSIZE_KEY   = 'wallcal_fontsize';
-  const TASKS_LIST_KEY = 'wallcal_tasks_list';
+  const BLACKOUT_KEY         = 'wallcal_blackout';
+  const THEME_KEY            = 'wallcal_theme';
+  const LOCATION_KEY         = 'wallcal_location';
+  const FONTSIZE_KEY         = 'wallcal_fontsize';
+  const TASKS_LIST_KEY       = 'wallcal_tasks_list';
+  const REMINDER_WINDOW_KEY  = 'wallcal_reminder_window';
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
@@ -309,6 +310,21 @@ const Settings = (() => {
     _applyBlackout();
   }
 
+  // ── Reminder window ───────────────────────────────────────────────────────
+
+  function getReminderWindow() {
+    return localStorage.getItem(REMINDER_WINDOW_KEY) || '30';
+  }
+
+  function _initReminderWindowControls() {
+    const select = document.getElementById('reminder-window-select');
+    select.value = getReminderWindow();
+    select.addEventListener('change', () => {
+      localStorage.setItem(REMINDER_WINDOW_KEY, select.value);
+      Panel.refreshTasks();
+    });
+  }
+
   // ── Font Size ─────────────────────────────────────────────────────────────
 
   function _initFontSizeControls() {
@@ -464,6 +480,7 @@ const Settings = (() => {
     document.getElementById('save-btn').addEventListener('click', _handleSave);
     document.getElementById('blackout').addEventListener('click', open);
 
+    _initReminderWindowControls();
     _initFontSizeControls();
     _initThemeControls();
     _applyTheme();
@@ -484,7 +501,7 @@ const Settings = (() => {
     setInterval(() => { _applyTheme(); _applyBlackout(); }, 60 * 1000);
   }
 
-  return { init, loadCalendarList, loadTaskListOptions };
+  return { init, loadCalendarList, loadTaskListOptions, getReminderWindow };
 })();
 
 // Boot.

@@ -89,8 +89,20 @@ const Panel = (() => {
   }
 
   function _renderTasks(tasks) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const window = Settings.getReminderWindow();
+    const cutoff = window === 'all' ? null
+      : new Date(today.getTime() + parseInt(window, 10) * 24 * 60 * 60 * 1000);
+
     const active = tasks
       .filter((t) => t.status !== 'completed')
+      .filter((t) => {
+        if (!t.due || !cutoff) return true;
+        const [y, mo, d] = t.due.substring(0, 10).split('-').map(Number);
+        return new Date(y, mo - 1, d) <= cutoff;
+      })
       .sort((a, b) => {
         if (!a.due && !b.due) return a.title.localeCompare(b.title);
         if (!a.due) return 1;
@@ -98,9 +110,6 @@ const Panel = (() => {
         return a.due.localeCompare(b.due);
       })
       .slice(0, 30);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     const list = document.getElementById('panel-tasks-list');
     list.innerHTML = '';
