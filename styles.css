@@ -1,3 +1,6 @@
+/* ===== Fonts ===== */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap');
+
 /* ===== Reset & Base ===== */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -34,7 +37,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 16px;
   overflow: hidden;
 }
 
@@ -208,11 +211,38 @@ html, body {
 
 .task-due {
   font-size: 0.72em;
-  color: rgba(255, 255, 255, 0.55);
+}
+
+#left-panel .task-due {
+  color: #888;
 }
 
 .task-overdue {
   color: #ff6b6b;
+}
+
+/* Quote */
+#panel-quote {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.quote-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.quote-author {
+  margin-top: 6px;
+  font-family: Georgia;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.38);
+  text-align: right;
 }
 
 /* ===== App Shell ===== */
