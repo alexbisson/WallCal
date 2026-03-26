@@ -5,15 +5,13 @@
 const Auth = (() => {
   const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks.readonly';
   const CLIENT_ID_KEY = 'wallcal_client_id';
+  const TOKEN_KEY = 'wallcal_access_token';
+  const TOKEN_EXPIRY_KEY = 'wallcal_token_expiry';
 
   let tokenClient = null;
   let pendingResolve = null;
   let pendingReject = null;
   let _pendingGetToken = null;
-
-  // In-memory token cache — never written to localStorage so XSS cannot steal it.
-  let _cachedToken = null;
-  let _tokenExpiry = 0;
 
   // ── Storage ──────────────────────────────────────────────────────────────
 
@@ -26,22 +24,26 @@ const Auth = (() => {
   }
 
   function _saveToken(response) {
-    _cachedToken = response.access_token;
+    const token = response.access_token;
     // Refresh 1 minute before actual expiry to avoid races
-    _tokenExpiry = Date.now() + response.expires_in * 1000 - 60_000;
-    return _cachedToken;
+    const expiry = Date.now() + response.expires_in * 1000 - 60_000;
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiry));
+    return token;
   }
 
   function _loadStoredToken() {
-    if (_cachedToken && Date.now() < _tokenExpiry) {
-      return _cachedToken;
+    const token = localStorage.getItem(TOKEN_KEY);
+    const expiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+    if (token && Date.now() < expiry) {
+      return token;
     }
     return null;
   }
 
   function clearToken() {
-    _cachedToken = null;
-    _tokenExpiry = 0;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
   }
 
   // ── GIS token client ──────────────────────────────────────────────────────
