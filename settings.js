@@ -215,6 +215,7 @@ const Settings = (() => {
       hint.textContent = `Showing weather for ${loc.city}.`;
       input.value = loc.city;
       Panel.refreshWeather();
+      _updateAutoThemeAvailability();
       _applyTheme();
     }
 
@@ -473,6 +474,23 @@ const Settings = (() => {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }
 
+  function _updateAutoThemeAvailability() {
+    const hasCity = !!JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null')?.city;
+    const autoRadio = document.getElementById('theme-auto');
+    const autoLabel = document.querySelector('label[for="theme-auto"]');
+    autoRadio.disabled = !hasCity;
+    autoLabel.style.opacity = hasCity ? '' : '0.4';
+    autoLabel.title = hasCity ? '' : 'Select a city to enable Auto mode';
+    // If auto is selected but city was removed, fall back to dark.
+    if (!hasCity && _loadTheme() === 'auto') {
+      _saveTheme('dark');
+      const darkRadio = document.getElementById('theme-dark');
+      if (darkRadio) darkRadio.checked = true;
+      document.getElementById('theme-hint').classList.add('hidden');
+      _applyTheme();
+    }
+  }
+
   function _initThemeControls() {
     const saved = _loadTheme();
     const radio = document.querySelector(`input[name="theme"][value="${saved}"]`);
@@ -483,6 +501,8 @@ const Settings = (() => {
         'Uses your location to switch at sunrise and sunset.';
       document.getElementById('theme-hint').classList.remove('hidden');
     }
+
+    _updateAutoThemeAvailability();
 
     document.querySelectorAll('input[name="theme"]').forEach((r) => {
       r.addEventListener('change', () => {
