@@ -230,6 +230,8 @@ const Settings = (() => {
         btn.textContent = 'Grant location access';
         if (_ && _.code === 1) {
           hint.textContent = 'Location access denied. Allow location access in your browser settings.';
+        } else if (_ && _.code === 2) {
+          hint.textContent = 'Location unavailable. On macOS, check System Settings → Privacy & Security → Location Services and ensure Safari is enabled.';
         } else {
           hint.textContent = 'Could not determine location. Try again or check browser settings.';
         }
