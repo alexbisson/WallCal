@@ -57,8 +57,10 @@ const Api = (() => {
   // ── Public API ────────────────────────────────────────────────────────────
 
   // Returns the user's calendar list (all calendars they have access to).
+  // showHidden:true is required to surface the auto-created Tasks calendar,
+  // which Google marks as hidden in the calendarList API response by default.
   async function fetchCalendars() {
-    const data = await _apiFetch('/users/me/calendarList', { maxResults: 250 });
+    const data = await _apiFetch('/users/me/calendarList', { maxResults: 250, showHidden: 'true' });
     return data.items || [];
   }
 
