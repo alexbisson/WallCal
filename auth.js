@@ -63,12 +63,20 @@ const Auth = (() => {
     if (resolve) resolve(token);
   }
 
+  function _handleErrorCallback(err) {
+    const reject = pendingReject;
+    pendingResolve = null;
+    pendingReject = null;
+    if (reject) reject(new Error(err && err.type ? err.type : 'popup_failed_to_open'));
+  }
+
   function _ensureTokenClient(clientId) {
     if (!tokenClient || tokenClient._clientId !== clientId) {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: SCOPE,
         callback: _handleCallback,
+        error_callback: _handleErrorCallback,
       });
       tokenClient._clientId = clientId;
     }
