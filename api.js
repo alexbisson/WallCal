@@ -30,7 +30,16 @@ const Api = (() => {
     });
 
     if (response.status === 401) {
+      // Access token was rejected. Clear it and try once more using the refresh
+      // token — getToken() will silently fetch a new access token via fetch().
       Auth.clearToken();
+      const newToken = await Auth.getToken();
+      if (newToken) {
+        const retry = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${newToken}` },
+        });
+        if (retry.ok) return retry.json();
+      }
       const err = new Error('token_expired');
       err.code = 'token_expired';
       throw err;
