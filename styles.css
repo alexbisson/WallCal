@@ -270,7 +270,14 @@ html, body {
   font-weight: 600;
 }
 
-#settings-btn {
+#header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#settings-btn,
+#reload-btn {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -282,7 +289,8 @@ html, body {
   transition: color 0.15s, background 0.15s;
 }
 
-#settings-btn:hover {
+#settings-btn:hover,
+#reload-btn:hover {
   color: var(--text);
   background: var(--surface-2);
 }

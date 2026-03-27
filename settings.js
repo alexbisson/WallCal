@@ -299,8 +299,8 @@ const Settings = (() => {
         _showSaveMessage('Use HH:MM format (e.g. 22:00).', 'error');
         return;
       }
-      if (from >= to) {
-        _showSaveMessage('From must be earlier than To.', 'error');
+      if (from === to) {
+        _showSaveMessage('From and To cannot be the same time.', 'error');
         return;
       }
     }
