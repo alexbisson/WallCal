@@ -133,9 +133,9 @@ const Api = (() => {
     url.searchParams.set('latitude',      String(lat));
     url.searchParams.set('longitude',     String(lng));
     url.searchParams.set('current_weather', 'true');
-    url.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,precipitation_sum');
+    url.searchParams.set('daily', 'temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode');
     url.searchParams.set('timezone',      'auto');
-    url.searchParams.set('forecast_days', '1');
+    url.searchParams.set('forecast_days', '4');
     const resp = await fetch(url.toString());
     if (!resp.ok) throw new Error(`Weather API ${resp.status}`);
     return resp.json();

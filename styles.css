@@ -165,6 +165,54 @@ html, body {
   white-space: nowrap;
 }
 
+.weather-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 10px 0 8px;
+  opacity: 0.5;
+}
+
+.weather-forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.forecast-day {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.forecast-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 2.8em;
+  flex-shrink: 0;
+}
+
+.forecast-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.forecast-low {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 4em;
+  flex-shrink: 0;
+}
+
+.forecast-high {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* Tasks card */
 .panel-section-title {
   font-size: 0.62em;

@@ -50,6 +50,16 @@ const Panel = (() => {
     const low    = Math.round(daily.temperature_2m_min[0]);
     const precip = daily.precipitation_sum[0];
 
+    const forecastDays = [1, 2, 3].map(i => {
+      const date = new Date(daily.time[i] + 'T12:00:00');
+      return {
+        label: date.toLocaleDateString('default', { weekday: 'short' }),
+        icon:  _weatherInfo(daily.weathercode[i]).icon,
+        high:  Math.round(daily.temperature_2m_max[i]),
+        low:   Math.round(daily.temperature_2m_min[i]),
+      };
+    });
+
     const section = document.getElementById('panel-weather');
     section.innerHTML = `
       <div class="weather-row">
@@ -59,9 +69,18 @@ const Panel = (() => {
           <span class="weather-label">${label.toUpperCase()}</span>
         </div>
         <div class="weather-hl">
-          <span>H: ${high}° &nbsp; L: ${low}°</span>
+          <span>L: ${low}° &nbsp; H: ${high}°</span>
           <span>${precip > 0 ? `💧 ${precip} mm` : 'No rain'}</span>
         </div>
+      </div>
+      <hr class="weather-divider">
+      <div class="weather-forecast">
+        ${forecastDays.map(d => `
+          <div class="forecast-day">
+            <span class="forecast-label">${d.label}</span>
+            <span class="forecast-icon">${d.icon}</span>
+            <span class="forecast-low">L: ${d.low}°</span><span class="forecast-high">H: ${d.high}°</span>
+          </div>`).join('')}
       </div>`;
     section.classList.remove('hidden');
   }
