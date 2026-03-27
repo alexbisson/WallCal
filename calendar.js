@@ -242,7 +242,13 @@ const Calendar = (() => {
       _setStatus(`Updated ${new Date().toLocaleTimeString()}`);
     } catch (err) {
       if (err.code === 'not_authenticated') {
-        showUnauthenticated();
+        if (Auth.getClientId()) {
+          // Calendar was configured but silent re-auth failed after token expiry.
+          // Keep the existing grid visible; just update the status bar.
+          _setStatus('Session expired — open settings ⚙ to reconnect.');
+        } else {
+          showUnauthenticated();
+        }
       } else if (err.code === 'token_expired') {
         _setStatus('Session expired — open settings ⚙ to reconnect.');
       } else {
