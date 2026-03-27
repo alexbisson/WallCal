@@ -24,9 +24,15 @@ const Settings = (() => {
     document.getElementById('settings-panel').classList.remove('hidden');
     document.getElementById('settings-overlay').classList.remove('hidden');
 
-    // Pre-populate client ID field from storage.
+    // Pre-populate credential fields from storage.
     const stored = Auth.getClientId();
     if (stored) document.getElementById('client-id-input').value = stored;
+    const secret = Auth.getClientSecret();
+    if (secret) document.getElementById('client-secret-input').value = secret;
+
+    // Show the redirect URI the user needs to register in Google Cloud Console.
+    document.getElementById('redirect-uri-display').textContent =
+      window.location.origin + window.location.pathname.replace(/\/+$/, '');
 
     // Load calendar and task lists if we already have a token.
     loadCalendarList();
@@ -48,7 +54,8 @@ const Settings = (() => {
   // ── Connect button ────────────────────────────────────────────────────────
 
   async function _handleConnect() {
-    const clientId = document.getElementById('client-id-input').value.trim();
+    const clientId     = document.getElementById('client-id-input').value.trim();
+    const clientSecret = document.getElementById('client-secret-input').value.trim();
     if (!clientId) {
       _showMessage('Please enter your OAuth Client ID.', 'error');
       return;
@@ -60,7 +67,7 @@ const Settings = (() => {
     _showMessage('');
 
     try {
-      await Auth.connect(clientId);
+      await Auth.connect(clientId, clientSecret);
       _showMessage('Connected successfully.', 'success');
       btn.textContent = 'Reconnect Google';
       btn.disabled = false;
@@ -70,7 +77,10 @@ const Settings = (() => {
       loadCalendarList();
       loadTaskListOptions();
     } catch (err) {
-      _showMessage(`Connection failed: ${err.message}`, 'error');
+      const msg = err.code === 'popup_blocked'
+        ? 'Popup blocked — please allow popups for this page and try again.'
+        : `Connection failed: ${err.message}`;
+      _showMessage(msg, 'error');
       btn.textContent = 'Connect Google';
       btn.disabled = false;
     }

@@ -65,6 +65,17 @@
           spellcheck="false"
         >
       </div>
+      <div class="field-group">
+        <label for="client-secret-input">Client Secret <span class="settings-hint-inline">(Web app clients)</span></label>
+        <input
+          type="password"
+          id="client-secret-input"
+          placeholder="leave empty for Desktop app clients"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+      <p class="settings-hint">Redirect URI to register in Google Cloud Console:<br><code id="redirect-uri-display"></code></p>
       <button id="connect-btn">Connect Google</button>
       <p id="settings-message" class="settings-message" aria-live="polite"></p>
       <div id="task-list-container" class="field-group" style="margin-top:10px">
@@ -161,11 +172,11 @@
 
   <div id="blackout" class="hidden" title="Click to open settings"></div>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+  <script src="auth.js"></script>
+  <script>Auth.handleRedirect();</script>
   <script src="cities.js"></script>
   <script src="version.js"></script>
-  <script src="auth.js"></script>
   <script src="api.js"></script>
   <script src="calendar.js"></script>
   <script src="panel.js"></script>

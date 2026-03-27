@@ -30,7 +30,16 @@ const Api = (() => {
     });
 
     if (response.status === 401) {
+      // Access token was rejected. Clear it and try once more using the refresh
+      // token — getToken() will silently fetch a new access token via fetch().
       Auth.clearToken();
+      const newToken = await Auth.getToken();
+      if (newToken) {
+        const retry = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${newToken}` },
+        });
+        if (retry.ok) return retry.json();
+      }
       const err = new Error('token_expired');
       err.code = 'token_expired';
       throw err;
@@ -48,8 +57,10 @@ const Api = (() => {
   // ── Public API ────────────────────────────────────────────────────────────
 
   // Returns the user's calendar list (all calendars they have access to).
+  // showHidden:true is required to surface the auto-created Tasks calendar,
+  // which Google marks as hidden in the calendarList API response by default.
   async function fetchCalendars() {
-    const data = await _apiFetch('/users/me/calendarList', { maxResults: 250 });
+    const data = await _apiFetch('/users/me/calendarList', { maxResults: 250, showHidden: 'true' });
     return data.items || [];
   }
 
