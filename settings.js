@@ -205,36 +205,76 @@ const Settings = (() => {
   // ── Weather location ──────────────────────────────────────────────────────
 
   function _initWeatherControls() {
-    const hint = document.getElementById('weather-location-hint');
-    const btn  = document.getElementById('grant-location-btn');
-    const cached = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
+    const hint        = document.getElementById('weather-location-hint');
+    const input       = document.getElementById('city-search');
+    const suggestions = document.getElementById('city-suggestions');
+    const cached      = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
 
-    if (cached) {
-      hint.textContent = 'Location access granted. Weather shows in the left panel.';
-    } else {
-      hint.textContent = 'Grant location access to show weather in the left panel.';
-      btn.classList.remove('hidden');
+    function _setLocation(loc) {
+      localStorage.setItem(LOCATION_KEY, JSON.stringify(loc));
+      hint.textContent = `Showing weather for ${loc.city}.`;
+      input.value = loc.city;
+      Panel.refreshWeather();
+      _applyTheme();
     }
 
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      btn.textContent = 'Requesting…';
-      try {
-        await _getLocation();
-        hint.textContent = 'Location access granted. Weather shows in the left panel.';
-        btn.classList.add('hidden');
-        Panel.refreshWeather();
-      } catch (_) {
-        hint.textContent = 'Location access denied.';
-        btn.disabled = false;
-        btn.textContent = 'Grant location access';
-        if (_ && _.code === 1) {
-          hint.textContent = 'Location access denied. Allow location access in your browser settings.';
-        } else if (_ && _.code === 2) {
-          hint.textContent = 'Location unavailable. On macOS, check System Settings → Privacy & Security → Location Services and ensure Safari is enabled.';
-        } else {
-          hint.textContent = 'Could not determine location. Try again or check browser settings.';
-        }
+    hint.textContent = cached?.city
+      ? `Showing weather for ${cached.city}.`
+      : 'Search for your city to show weather.';
+    input.value = cached?.city || '';
+
+    // City autocomplete
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      suggestions.innerHTML = '';
+      if (q.length < 2) { suggestions.classList.add('hidden'); return; }
+
+      const matches = CITIES.filter(([name, country]) =>
+        name.toLowerCase().includes(q) || country.toLowerCase().includes(q)
+      ).sort(([a], [b]) => {
+        const al = a.toLowerCase(), bl = b.toLowerCase();
+        if (al.startsWith(q) && !bl.startsWith(q)) return -1;
+        if (!al.startsWith(q) && bl.startsWith(q)) return 1;
+        return a.localeCompare(b);
+      }).slice(0, 7);
+
+      if (!matches.length) { suggestions.classList.add('hidden'); return; }
+
+      matches.forEach(([name, country, lat, lng]) => {
+        const li = document.createElement('li');
+        li.textContent = `${name}, ${country}`;
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          suggestions.classList.add('hidden');
+          _setLocation({ lat, lng, city: `${name}, ${country}` });
+        });
+        suggestions.appendChild(li);
+      });
+      suggestions.classList.remove('hidden');
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => suggestions.classList.add('hidden'), 150);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const items = suggestions.querySelectorAll('li');
+      const active = suggestions.querySelector('li.active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = active ? active.nextElementSibling : items[0];
+        if (active) active.classList.remove('active');
+        if (next) next.classList.add('active');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = active ? active.previousElementSibling : items[items.length - 1];
+        if (active) active.classList.remove('active');
+        if (prev) prev.classList.add('active');
+      } else if (e.key === 'Enter' && active) {
+        e.preventDefault();
+        active.dispatchEvent(new MouseEvent('mousedown'));
+      } else if (e.key === 'Escape') {
+        suggestions.classList.add('hidden');
       }
     });
   }
@@ -416,39 +456,21 @@ const Settings = (() => {
     return { sunrise: calc(true), sunset: calc(false) };
   }
 
-  // Returns cached location or requests it via the Geolocation API.
-  function _getLocation() {
-    return new Promise((resolve, reject) => {
-      const cached = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
-      if (cached) { resolve(cached); return; }
-      if (!navigator.geolocation) { reject(new Error('Geolocation unavailable')); return; }
-      navigator.geolocation.getCurrentPosition(
-        ({ coords: { latitude: lat, longitude: lng } }) => {
-          const loc = { lat, lng };
-          localStorage.setItem(LOCATION_KEY, JSON.stringify(loc));
-          resolve(loc);
-        },
-        reject,
-        { timeout: 15_000, enableHighAccuracy: false, maximumAge: 600_000 },
-      );
-    });
-  }
-
-  async function _applyTheme() {
+  function _applyTheme() {
     const theme = _loadTheme();
     if (theme !== 'auto') {
       document.documentElement.setAttribute('data-theme', theme);
       return;
     }
-    try {
-      const { lat, lng } = await _getLocation();
-      const { sunrise, sunset } = _sunTimes(lat, lng);
-      const now    = new Date();
-      const isDark = !sunrise || !sunset || now < sunrise || now >= sunset;
-      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    } catch (_) {
+    const loc = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
+    if (!loc) {
       document.documentElement.setAttribute('data-theme', 'dark');
+      return;
     }
+    const { sunrise, sunset } = _sunTimes(loc.lat, loc.lng);
+    const now    = new Date();
+    const isDark = !sunrise || !sunset || now < sunrise || now >= sunset;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }
 
   function _initThemeControls() {

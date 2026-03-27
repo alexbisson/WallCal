@@ -622,6 +622,56 @@ html, body {
   color: var(--text-muted);
 }
 
+/* ===== City Autocomplete ===== */
+.city-autocomplete {
+  margin-top: 8px;
+  position: relative;
+}
+
+#city-search {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#city-search:focus {
+  border-color: var(--accent);
+}
+
+#city-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  list-style: none;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+#city-suggestions li {
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+#city-suggestions li:hover,
+#city-suggestions li.active {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
 /* ===== Calendar Toggles ===== */
 .calendar-item {
   display: flex;
@@ -754,22 +804,6 @@ html, body {
   border-color: var(--accent);
 }
 
-.secondary-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 6px;
-  padding: 7px 12px;
-  font-size: 0.82rem;
-  font-family: var(--font);
-  cursor: pointer;
-  transition: background 0.15s;
-  margin-top: 6px;
-}
-
-.secondary-btn:hover {
-  background: var(--surface-2);
-}
 
 /* ===== Save Button ===== */
 #save-btn {

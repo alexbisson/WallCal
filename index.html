@@ -147,7 +147,10 @@
     <section class="settings-section">
       <h3>Weather</h3>
       <p id="weather-location-hint" class="settings-hint"></p>
-      <button id="grant-location-btn" class="secondary-btn hidden">Grant location access</button>
+      <div class="city-autocomplete">
+        <input type="text" id="city-search" placeholder="Search city…" autocomplete="off" spellcheck="false">
+        <ul id="city-suggestions" class="hidden"></ul>
+      </div>
     </section>
 
     <section class="settings-section">
@@ -159,6 +162,7 @@
   <div id="blackout" class="hidden" title="Click to open settings"></div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="cities.js"></script>
   <script src="version.js"></script>
   <script src="auth.js"></script>
   <script src="api.js"></script>
