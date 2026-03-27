@@ -6,6 +6,7 @@
 const Panel = (() => {
   const LOCATION_KEY = 'wallcal_location';
   const TASKS_KEY    = 'wallcal_tasks_list';
+  const QUOTE_TTL    = 60 * 60 * 1000; // refresh quote every hour
 
   // ── Clock ──────────────────────────────────────────────────────────────────
 
