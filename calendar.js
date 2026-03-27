@@ -208,7 +208,13 @@ const Calendar = (() => {
   }
 
   function _setStatus(msg) {
-    document.getElementById('status-bar').textContent = msg;
+    document.getElementById('status-msg').textContent = msg;
+  }
+
+  function _initVersion() {
+    if (typeof APP_VERSION !== 'undefined') {
+      document.getElementById('status-version').textContent = `v${APP_VERSION}`;
+    }
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -246,5 +252,5 @@ const Calendar = (() => {
     }
   }
 
-  return { refresh, showUnauthenticated, getWindow };
+  return { refresh, showUnauthenticated, getWindow, initVersion: _initVersion };
 })();

@@ -34,11 +34,14 @@
       <span id="month-label"></span>
       <div id="header-actions">
         <button id="reload-btn" aria-label="Reload" title="Reload" onclick="location.reload()">↻</button>
-        <button id="settings-btn" aria-label="Settings" title="Settings">⚙</button>
+        <button id="settings-btn" aria-label="Settings" title="Settings">⚙️</button>
       </div>
     </header>
     <main id="calendar-grid" aria-label="Calendar"></main>
-    <footer id="status-bar"></footer>
+    <footer id="status-bar">
+      <span id="status-msg"></span>
+      <span id="status-version"></span>
+    </footer>
     </div>
   </div>
 
@@ -156,6 +159,7 @@
   <div id="blackout" class="hidden" title="Click to open settings"></div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="version.js"></script>
   <script src="auth.js"></script>
   <script src="api.js"></script>
   <script src="calendar.js"></script>

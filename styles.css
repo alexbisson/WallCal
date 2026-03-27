@@ -297,6 +297,8 @@ html, body {
 
 /* ===== Status Bar ===== */
 #status-bar {
+  display: flex;
+  justify-content: space-between;
   padding: 3px 16px;
   font-size: 0.72rem;
   color: var(--text-muted);

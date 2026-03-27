@@ -228,6 +228,11 @@ const Settings = (() => {
         hint.textContent = 'Location access denied.';
         btn.disabled = false;
         btn.textContent = 'Grant location access';
+        if (_ && _.code === 1) {
+          hint.textContent = 'Location access denied. Allow location access in your browser settings.';
+        } else {
+          hint.textContent = 'Could not determine location. Try again or check browser settings.';
+        }
       }
     });
   }
@@ -422,7 +427,7 @@ const Settings = (() => {
           resolve(loc);
         },
         reject,
-        { timeout: 10_000 },
+        { timeout: 15_000, enableHighAccuracy: false, maximumAge: 600_000 },
       );
     });
   }
@@ -487,6 +492,8 @@ const Settings = (() => {
     _initBlackoutControls();
     _applyBlackout();
     _initWeatherControls();
+
+    Calendar.initVersion();
 
     // Kick off the initial calendar render.
     if (Auth.getClientId()) {
