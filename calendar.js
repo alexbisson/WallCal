@@ -180,6 +180,11 @@ const Calendar = (() => {
 
     grid.appendChild(body);
     _updateMonthLabel(start);
+
+    if (typeof twemoji !== 'undefined') {
+      twemoji.parse(document.getElementById('month-label'));
+      twemoji.parse(grid);
+    }
   }
 
   function _updateMonthLabel(start) {

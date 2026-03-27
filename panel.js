@@ -84,6 +84,7 @@ const Panel = (() => {
           </div>`).join('')}
       </div>`;
     section.classList.remove('hidden');
+    if (typeof twemoji !== 'undefined') twemoji.parse(section);
   }
 
   // ── Tasks ──────────────────────────────────────────────────────────────────
@@ -161,6 +162,7 @@ const Panel = (() => {
     }
 
     document.getElementById('panel-tasks').classList.toggle('hidden', active.length === 0);
+    if (typeof twemoji !== 'undefined') twemoji.parse(list);
   }
 
   // ── Quote ──────────────────────────────────────────────────────────────────
