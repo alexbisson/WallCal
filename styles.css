@@ -144,6 +144,14 @@ html, body {
   gap: 2px;
 }
 
+/* Twemoji SVG images — ensures emoji scale with surrounding text */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: -0.15em;
+  display: inline-block;
+}
+
 .weather-icon {
   font-size: 1.5rem;
   line-height: 1;
