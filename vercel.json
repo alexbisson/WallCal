@@ -1,0 +1,3 @@
+{
+  "buildCommand": "echo \"const APP_VERSION = $(git rev-list --count HEAD);\" > version.js"
+}
