@@ -1,1 +1,1 @@
-const APP_VERSION = 25;
+const APP_VERSION = '2026-03-28';

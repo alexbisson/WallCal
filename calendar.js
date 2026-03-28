@@ -242,11 +242,12 @@ const Calendar = (() => {
       ]);
 
       const { start, end } = getWindow();
-      const eventColorMap = colorsResponse ? colorsResponse.event : {};
+      const eventColorMap    = colorsResponse ? colorsResponse.event    : {};
+      const calendarColorMap = colorsResponse ? colorsResponse.calendar : {};
       const showTasks = localStorage.getItem('wallcal_show_tasks') === 'true';
 
       const [calEvents, taskEvents] = await Promise.all([
-        Api.fetchAllEvents(calendars, start, end, eventColorMap),
+        Api.fetchAllEvents(calendars, start, end, eventColorMap, calendarColorMap),
         showTasks ? Api.fetchTaskEvents(start, end) : Promise.resolve([]),
       ]);
 
