@@ -78,9 +78,6 @@
       <p class="settings-hint">Redirect URI to register in Google Cloud Console:<br><code id="redirect-uri-display"></code></p>
       <button id="connect-btn">Connect Google</button>
       <p id="settings-message" class="settings-message" aria-live="polite"></p>
-      <div id="task-list-container" class="field-group" style="margin-top:10px">
-        <p class="settings-hint">Connect to see your task lists.</p>
-      </div>
     </section>
 
     <section class="settings-section">
@@ -92,6 +89,9 @@
 
     <section class="settings-section">
       <h3>Reminders</h3>
+      <div id="task-list-container" class="field-group">
+        <p class="settings-hint">Connect to see your task lists.</p>
+      </div>
       <div class="field-group">
         <label for="reminder-window-select">Show reminders due within</label>
         <select id="reminder-window-select" class="settings-select">
@@ -102,6 +102,15 @@
           <option value="30">30 days</option>
           <option value="all">All</option>
         </select>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h3>Weather</h3>
+      <p id="weather-location-hint" class="settings-hint"></p>
+      <div class="city-autocomplete">
+        <input type="text" id="city-search" placeholder="Search city…" autocomplete="off" spellcheck="false">
+        <ul id="city-suggestions" class="hidden"></ul>
       </div>
     </section>
 
@@ -152,15 +161,6 @@
             <input type="text" id="blackout-to" placeholder="HH:MM" maxlength="5" inputmode="numeric">
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="settings-section">
-      <h3>Weather</h3>
-      <p id="weather-location-hint" class="settings-hint"></p>
-      <div class="city-autocomplete">
-        <input type="text" id="city-search" placeholder="Search city…" autocomplete="off" spellcheck="false">
-        <ul id="city-suggestions" class="hidden"></ul>
       </div>
     </section>
 
