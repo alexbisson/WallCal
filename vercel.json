@@ -1,4 +1,4 @@
 {
-  "buildCommand": "echo \"const APP_VERSION = $(git rev-list --count HEAD);\" > version.js",
+  "buildCommand": "git fetch --unshallow 2>/dev/null || true; echo \"const APP_VERSION = $(git rev-list --count HEAD);\" > version.js",
   "outputDirectory": "."
 }
