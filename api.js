@@ -88,9 +88,10 @@ const Api = (() => {
   // Fetches events for all visible calendars and annotates each event with
   // its resolved background/foreground colors.
   //
-  // eventColorMap — the `event` sub-object from fetchColors(), keyed by colorId.
-  //   Pass {} to skip event-level color overrides.
-  async function fetchAllEvents(calendars, timeMin, timeMax, eventColorMap) {
+  // eventColorMap    — the `event`    sub-object from fetchColors(), keyed by colorId.
+  // calendarColorMap — the `calendar` sub-object from fetchColors(), keyed by colorId.
+  //   Pass {} for either to skip that level of color resolution.
+  async function fetchAllEvents(calendars, timeMin, timeMax, eventColorMap, calendarColorMap = {}) {
     const hidden = JSON.parse(localStorage.getItem('wallcal_hidden') || '[]');
     const visible = calendars.filter((c) => !hidden.includes(c.id));
 
@@ -104,10 +105,16 @@ const Api = (() => {
               const override = event.colorId && eventColorMap
                 ? eventColorMap[event.colorId]
                 : null;
+              // Calendar color: prefer the canonical Colors API palette entry
+              // (keyed by colorId) over the raw backgroundColor field, which can
+              // drift from what Google Calendar actually displays.
+              const calPalette = cal.colorId && calendarColorMap
+                ? calendarColorMap[cal.colorId]
+                : null;
               return {
                 ...event,
-                _bgColor: override ? override.background : (cal.backgroundColor || '#4285f4'),
-                _fgColor: override ? override.foreground : (cal.foregroundColor || '#ffffff'),
+                _bgColor: override ? override.background : (calPalette ? calPalette.background : (cal.backgroundColor || '#4285f4')),
+                _fgColor: override ? override.foreground : (calPalette ? calPalette.foreground : (cal.foregroundColor || '#ffffff')),
                 _calId: cal.id,
               };
             }),
