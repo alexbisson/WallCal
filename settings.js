@@ -104,9 +104,37 @@ const Settings = (() => {
     try {
       const calendars = await Api.fetchCalendars();
       _renderCalendarList(container, calendars);
+      _appendTasksToggle(container);
     } catch (_) {
       // Not critical — the list will repopulate on next open.
     }
+  }
+
+  function _appendTasksToggle(container) {
+    const item = document.createElement('div');
+    item.className = 'calendar-item';
+
+    const dot = document.createElement('span');
+    dot.className = 'calendar-dot';
+    dot.style.backgroundColor = '#1a73e8';
+
+    const name = document.createElement('span');
+    name.className = 'calendar-name';
+    name.textContent = 'Tasks';
+    name.title = 'Tasks (due dates)';
+
+    const toggle = document.createElement('input');
+    toggle.type = 'checkbox';
+    toggle.className = 'calendar-toggle';
+    toggle.checked = localStorage.getItem('wallcal_show_tasks') === 'true';
+    toggle.setAttribute('aria-label', 'Show Tasks');
+    toggle.addEventListener('change', () => {
+      localStorage.setItem('wallcal_show_tasks', String(toggle.checked));
+      Calendar.refresh();
+    });
+
+    item.append(dot, name, toggle);
+    container.appendChild(item);
   }
 
   function _renderCalendarList(container, calendars) {
