@@ -152,7 +152,7 @@ const Api = (() => {
           summary: t.title || '(No title)',
           start: { date: dateStr },
           end:   { date: endDate.toISOString().substring(0, 10) },
-          _bgColor: '#1a73e8',
+          _bgColor: '#d50000',
           _fgColor: '#ffffff',
         };
       });

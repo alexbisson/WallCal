@@ -213,7 +213,9 @@ const Calendar = (() => {
   }
 
   function _setStatus(msg) {
-    document.getElementById('status-msg').textContent = msg;
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    if (typeof twemoji !== 'undefined') twemoji.parse(el);
   }
 
   function _initVersion() {

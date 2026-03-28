@@ -116,7 +116,7 @@ const Settings = (() => {
 
     const dot = document.createElement('span');
     dot.className = 'calendar-dot';
-    dot.style.backgroundColor = '#1a73e8';
+    dot.style.backgroundColor = '#d50000';
 
     const name = document.createElement('span');
     name.className = 'calendar-name';
@@ -574,6 +574,8 @@ const Settings = (() => {
     _initBlackoutControls();
     _applyBlackout();
     _initWeatherControls();
+
+    if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('settings-btn'));
 
     Calendar.initVersion();
 
