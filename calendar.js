@@ -241,9 +241,14 @@ const Calendar = (() => {
 
       const { start, end } = getWindow();
       const eventColorMap = colorsResponse ? colorsResponse.event : {};
-      const events = await Api.fetchAllEvents(calendars, start, end, eventColorMap);
+      const showTasks = localStorage.getItem('wallcal_show_tasks') === 'true';
 
-      _render(events);
+      const [calEvents, taskEvents] = await Promise.all([
+        Api.fetchAllEvents(calendars, start, end, eventColorMap),
+        showTasks ? Api.fetchTaskEvents(start, end) : Promise.resolve([]),
+      ]);
+
+      _render([...calEvents, ...taskEvents]);
       _setStatus(`Updated ${new Date().toLocaleTimeString()}`);
     } catch (err) {
       if (err.code === 'not_authenticated') {

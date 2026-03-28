@@ -128,6 +128,36 @@ const Api = (() => {
     return data.items || [];
   }
 
+  // Fetches tasks with due dates from all task lists and returns them as
+  // all-day calendar event objects ready for the grid renderer.
+  // Only tasks within the [timeMin, timeMax) window are included.
+  async function fetchTaskEvents(timeMin, timeMax) {
+    const lists = await fetchTaskLists();
+    const results = await Promise.allSettled(lists.map((l) => fetchTasks(l.id)));
+
+    return results
+      .filter((r) => r.status === 'fulfilled')
+      .flatMap((r) => r.value)
+      .filter((t) => t.due && t.status !== 'completed')
+      .filter((t) => {
+        const d = new Date(t.due.substring(0, 10));
+        return d >= timeMin && d < timeMax;
+      })
+      .map((t) => {
+        const dateStr = t.due.substring(0, 10); // YYYY-MM-DD
+        const endDate = new Date(dateStr);
+        endDate.setDate(endDate.getDate() + 1);
+        return {
+          id: t.id,
+          summary: t.title || '(No title)',
+          start: { date: dateStr },
+          end:   { date: endDate.toISOString().substring(0, 10) },
+          _bgColor: '#1a73e8',
+          _fgColor: '#ffffff',
+        };
+      });
+  }
+
   async function fetchTasks(listId) {
     const data = await _apiFetch(
       `/lists/${encodeURIComponent(listId)}/tasks`,
@@ -152,5 +182,5 @@ const Api = (() => {
     return resp.json();
   }
 
-  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchWeather };
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather };
 })();
