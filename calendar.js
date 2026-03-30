@@ -65,6 +65,7 @@ const Calendar = (() => {
         (map[key] = map[key] || []).push({
           ...event,
           _isAllDay: false,
+          _isEvening: startDate.getHours() >= 17,
           _sortKey: '1' + event.start.dateTime, // timed sorts after all-day
           _timeStr: String(startDate.getHours()).padStart(2, '0') + ':'
                   + String(startDate.getMinutes()).padStart(2, '0'),
@@ -135,10 +136,14 @@ const Calendar = (() => {
     dateNum.textContent = date.getDate();
     cell.appendChild(dateNum);
 
-    const visible = dayEvents.slice(0, MAX_VISIBLE);
-    const overflowCount = dayEvents.length - MAX_VISIBLE;
+    // Split into regular (top) and evening (bottom, 17:00+) events
+    const regularEvents = dayEvents.filter(e => !e._isEvening);
+    const eveningEvents = dayEvents.filter(e => e._isEvening);
 
-    for (const event of visible) {
+    const visibleRegular = regularEvents.slice(0, MAX_VISIBLE);
+    const overflowCount = regularEvents.length - MAX_VISIBLE;
+
+    for (const event of visibleRegular) {
       cell.appendChild(_buildEventChip(event));
     }
 
@@ -147,6 +152,16 @@ const Calendar = (() => {
       more.className = 'overflow-indicator';
       more.textContent = `+${overflowCount} more`;
       cell.appendChild(more);
+    }
+
+    if (eveningEvents.length > 0) {
+      const spacer = document.createElement('div');
+      spacer.className = 'evening-spacer';
+      cell.appendChild(spacer);
+
+      for (const event of eveningEvents) {
+        cell.appendChild(_buildEventChip(event));
+      }
     }
 
     return cell;
