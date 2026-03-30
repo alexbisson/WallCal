@@ -104,14 +104,11 @@ const Calendar = (() => {
     } else {
       chip.className = 'event-chip timed';
 
-      const dot = document.createElement('span');
-      dot.className = 'event-dot';
-      dot.style.backgroundColor = event._bgColor;
-      chip.appendChild(dot);
-
       const timeSpan = document.createElement('span');
       timeSpan.className = 'event-time';
       timeSpan.textContent = event._timeStr;
+      timeSpan.style.backgroundColor = event._bgColor;
+      timeSpan.style.color = event._fgColor;
       chip.appendChild(timeSpan);
     }
 

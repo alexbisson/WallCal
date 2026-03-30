@@ -485,17 +485,12 @@ img.emoji {
   gap: 4px;
 }
 
-.event-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .event-time {
-  opacity: 0.85;
   flex-shrink: 0;
   white-space: nowrap;
+  padding: 0px 4px;
+  border-radius: 3px;
+  font-weight: 500;
 }
 
 .event-title {
