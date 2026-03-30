@@ -504,6 +504,11 @@ img.emoji {
   white-space: nowrap;
 }
 
+.evening-spacer {
+  flex: 1;
+  min-height: 0;
+}
+
 .overflow-indicator {
   font-size: 0.67em;
   color: var(--text-muted);
