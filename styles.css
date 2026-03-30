@@ -479,18 +479,18 @@ img.emoji {
 }
 
 .event-chip.timed {
-  background: none;
-  padding-left: 0;
   align-items: center;
   gap: 4px;
+  font-weight: 500;
 }
 
 .event-time {
   flex-shrink: 0;
   white-space: nowrap;
+  font-size: 0.85em;
   padding: 0px 4px;
   border-radius: 3px;
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .event-title {
