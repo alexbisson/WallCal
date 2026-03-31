@@ -241,10 +241,6 @@ img.emoji {
 }
 
 .task-item {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  flex-wrap: wrap;
   padding-left: 14px;
   position: relative;
 }
@@ -267,7 +263,7 @@ img.emoji {
 }
 
 .task-due {
-  font-size: 0.85em;
+  font-size: 1em;
 }
 
 #left-panel .task-due {
