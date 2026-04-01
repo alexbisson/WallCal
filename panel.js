@@ -152,9 +152,9 @@ const Panel = (() => {
 
         const dueSpan = document.createElement('span');
         dueSpan.className = 'task-due' + (overdue ? ' task-overdue' : '');
-        dueSpan.textContent = ' [' + (overdue ? '⚠️ ' : '') + dueDate.toLocaleDateString('default', {
+        dueSpan.textContent = dueDate.toLocaleDateString('default', {
           month: 'short', day: 'numeric',
-        }) + ']';
+        });
         nameSpan.appendChild(dueSpan);
       }
 
