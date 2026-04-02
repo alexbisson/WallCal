@@ -141,8 +141,6 @@ const Panel = (() => {
 
       const nameSpan = document.createElement('span');
       nameSpan.className = 'task-name';
-      nameSpan.textContent = task.title;
-      li.appendChild(nameSpan);
 
       if (task.due) {
         // Due dates are midnight UTC — parse without timezone shift.
@@ -150,13 +148,19 @@ const Panel = (() => {
         const dueDate = new Date(y, mo - 1, d);
         const overdue = dueDate < today;
 
+        nameSpan.textContent = (overdue ? '⚠️ ' : '') + task.title;
+
         const dueSpan = document.createElement('span');
         dueSpan.className = 'task-due' + (overdue ? ' task-overdue' : '');
         dueSpan.textContent = dueDate.toLocaleDateString('default', {
           month: 'short', day: 'numeric',
         });
         nameSpan.appendChild(dueSpan);
+      } else {
+        nameSpan.textContent = task.title;
       }
+
+      li.appendChild(nameSpan);
 
       list.appendChild(li);
     }
