@@ -1,11 +1,12 @@
 'use strict';
 
-// Panel module — left sidebar: clock, weather, tasks.
+// Panel module — left sidebar: clock, weather, tasks, stocks.
 // Depends on: Auth, Api
-// Exposes: init(), refreshWeather(), refreshTasks()
+// Exposes: init(), refreshWeather(), refreshTasks(), refreshStocks()
 const Panel = (() => {
   const LOCATION_KEY = 'wallcal_location';
   const TASKS_KEY    = 'wallcal_tasks_list';
+  const STOCKS_KEY   = 'wallcal_stocks';
   const QUOTE_TTL    = 60 * 60 * 1000; // refresh quote every hour
 
   // ── Clock ──────────────────────────────────────────────────────────────────
@@ -340,6 +341,82 @@ const Panel = (() => {
       `<p class="quote-author">\u2014 ${author}</p>`;
   }
 
+  // ── Stocks ─────────────────────────────────────────────────────────────────
+
+  function _sparkline(closes, positive) {
+    const W = 80, H = 28;
+    if (closes.length < 2) return '';
+    const min = Math.min(...closes);
+    const max = Math.max(...closes);
+    const range = max - min || 1;
+    const pts = closes.map((v, i) => {
+      const x = (i / (closes.length - 1)) * W;
+      const y = H - 2 - ((v - min) / range) * (H - 4);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const color = positive ? '#34d399' : '#f87171';
+    const id = `sg-${Math.random().toString(36).slice(2, 7)}`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" class="stock-sparkline">
+      <defs>
+        <linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M${pts.join(' L')} L${W},${H} L0,${H} Z" fill="url(#${id})"/>
+      <polyline points="${pts.join(' ')}" stroke="${color}" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  async function refreshStocks() {
+    const dow = new Date().getDay();
+    const section = document.getElementById('panel-stocks');
+    if (dow === 0 || dow === 6) { section.classList.add('hidden'); return; }
+
+    const symbols = JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol);
+    if (!symbols.length) { section.classList.add('hidden'); return; }
+
+    const delays = [5000, 15000, 45000];
+    for (let attempt = 0; attempt <= delays.length; attempt++) {
+      try {
+        const quotes = await Api.fetchStockQuotes(symbols);
+        _renderStocks(quotes);
+        return;
+      } catch (_) {
+        if (attempt < delays.length) {
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+    }
+  }
+
+  function _renderStocks(quotes) {
+    const section = document.getElementById('panel-stocks');
+    if (!quotes.length) { section.classList.add('hidden'); return; }
+
+    const rows = quotes.map(q => {
+      const pos = q.changePercent >= 0;
+      const sign = pos ? '+' : '';
+      const pct = `${sign}${q.changePercent.toFixed(2)}%`;
+      const price = q.price.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const chart = _sparkline(q.closes, pos);
+      return `<div class="stock-row">
+        <div class="stock-meta">
+          <span class="stock-symbol">${q.symbol}</span>
+          <span class="stock-name">${q.name}</span>
+        </div>
+        <div class="stock-chart">${chart}</div>
+        <div class="stock-price-col">
+          <span class="stock-price">${price}</span>
+          <span class="stock-change ${pos ? 'stock-pos' : 'stock-neg'}">${pct}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    section.innerHTML = `<h2 class="panel-section-title">Stocks</h2><div class="stock-list">${rows}</div>`;
+    section.classList.remove('hidden');
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────────
 
   function init() {
@@ -348,15 +425,17 @@ const Panel = (() => {
 
     refreshWeather();
     refreshTasks();
+    refreshStocks();
     _refreshQuote();
 
-    // Refresh weather every 30 min, tasks every 10 min, quote every hour.
+    // Refresh weather every 30 min, tasks every 10 min, stocks every 5 min, quote every hour.
     setInterval(refreshWeather, 30 * 60 * 1000);
     setInterval(refreshTasks,   10 * 60 * 1000);
+    setInterval(refreshStocks,   5 * 60 * 1000);
     setInterval(_refreshQuote,  QUOTE_TTL);
   }
 
-  return { init, refreshWeather, refreshTasks };
+  return { init, refreshWeather, refreshTasks, refreshStocks };
 })();
 
 Panel.init();

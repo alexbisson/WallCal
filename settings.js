@@ -10,6 +10,7 @@ const Settings = (() => {
   const FONTSIZE_KEY         = 'wallcal_fontsize';
   const TASKS_LIST_KEY       = 'wallcal_tasks_list';
   const REMINDER_WINDOW_KEY  = 'wallcal_reminder_window';
+  const STOCKS_KEY           = 'wallcal_stocks';
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
@@ -557,6 +558,110 @@ const Settings = (() => {
     });
   }
 
+  // ── Stocks ────────────────────────────────────────────────────────────────
+
+  function getStockSymbols() {
+    return JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]');
+  }
+
+  function _saveStocks(stocks) {
+    localStorage.setItem(STOCKS_KEY, JSON.stringify(stocks));
+    Panel.refreshStocks();
+  }
+
+  function _initStockControls() {
+    const list        = document.getElementById('stock-settings-list');
+    const input       = document.getElementById('stock-search');
+    const suggestions = document.getElementById('stock-suggestions');
+    let debounceTimer = null;
+
+    function _renderList() {
+      const stocks = getStockSymbols();
+      list.innerHTML = '';
+      stocks.forEach((s, i) => {
+        const li = document.createElement('li');
+        li.className = 'stock-settings-item';
+        li.innerHTML = `<div><span class="stock-settings-symbol">${s.symbol}</span><span class="stock-settings-name">${s.name}</span></div>`;
+        const btn = document.createElement('button');
+        btn.className = 'stock-remove-btn';
+        btn.setAttribute('aria-label', `Remove ${s.symbol}`);
+        btn.textContent = '✕';
+        btn.addEventListener('click', () => {
+          const updated = getStockSymbols().filter((_, j) => j !== i);
+          _saveStocks(updated);
+          _renderList();
+        });
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    function _addStock(symbol, name) {
+      const stocks = getStockSymbols();
+      if (!stocks.find(s => s.symbol === symbol)) {
+        _saveStocks([...stocks, { symbol, name }]);
+        _renderList();
+      }
+      input.value = '';
+      suggestions.classList.add('hidden');
+    }
+
+    function _showSuggestions(results) {
+      suggestions.innerHTML = '';
+      if (!results.length) { suggestions.classList.add('hidden'); return; }
+      results.forEach(q => {
+        const li = document.createElement('li');
+        const exchange = q.exchDisp || q.exchange || '';
+        li.innerHTML = `<span class="stock-sug-symbol">${q.symbol}</span><span class="stock-sug-name">${q.shortname || q.longname || ''}</span><span class="stock-sug-exchange">${exchange}</span>`;
+        li.addEventListener('mousedown', e => {
+          e.preventDefault();
+          _addStock(q.symbol, q.shortname || q.longname || q.symbol);
+        });
+        suggestions.appendChild(li);
+      });
+      suggestions.classList.remove('hidden');
+    }
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = input.value.trim();
+      if (q.length < 1) { suggestions.classList.add('hidden'); return; }
+      debounceTimer = setTimeout(async () => {
+        try {
+          const results = await Api.searchStocks(q);
+          _showSuggestions(results);
+        } catch (_) { suggestions.classList.add('hidden'); }
+      }, 250);
+    });
+
+    input.addEventListener('blur', () => {
+      setTimeout(() => suggestions.classList.add('hidden'), 150);
+    });
+
+    input.addEventListener('keydown', e => {
+      const items = suggestions.querySelectorAll('li');
+      const active = suggestions.querySelector('li.active');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = active ? active.nextElementSibling : items[0];
+        if (active) active.classList.remove('active');
+        if (next) next.classList.add('active');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = active ? active.previousElementSibling : items[items.length - 1];
+        if (active) active.classList.remove('active');
+        if (prev) prev.classList.add('active');
+      } else if (e.key === 'Enter' && active) {
+        e.preventDefault();
+        active.dispatchEvent(new MouseEvent('mousedown'));
+      } else if (e.key === 'Escape') {
+        suggestions.classList.add('hidden');
+      }
+    });
+
+    _renderList();
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────
 
   function init() {
@@ -574,6 +679,7 @@ const Settings = (() => {
     _initBlackoutControls();
     _applyBlackout();
     _initWeatherControls();
+    _initStockControls();
 
     if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('settings-btn'));
 
@@ -592,7 +698,7 @@ const Settings = (() => {
     setInterval(() => { _applyTheme(); _applyBlackout(); }, 60 * 1000);
   }
 
-  return { init, loadCalendarList, loadTaskListOptions, getReminderWindow };
+  return { init, loadCalendarList, loadTaskListOptions, getReminderWindow, getStockSymbols };
 })();
 
 // Boot.

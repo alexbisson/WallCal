@@ -189,5 +189,47 @@ const Api = (() => {
     return resp.json();
   }
 
-  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather };
+  // ── Stock API (Yahoo Finance — no key required) ───────────────────────────
+
+  async function _fetchStockQuote(symbol) {
+    const url = new URL(`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
+    url.searchParams.set('interval', '1d');
+    url.searchParams.set('range', '1mo');
+    const resp = await fetch(url.toString());
+    if (!resp.ok) throw new Error(`Stock API ${resp.status}`);
+    const data = await resp.json();
+    const result = data.chart.result[0];
+    const meta = result.meta;
+    const closes = (result.indicators.quote[0].close || []).filter(c => c !== null && !isNaN(c));
+    return {
+      symbol:        meta.symbol,
+      name:          meta.shortName || meta.symbol,
+      price:         meta.regularMarketPrice,
+      changePercent: meta.regularMarketChangePercent,
+      closes,
+    };
+  }
+
+  async function fetchStockQuotes(symbols) {
+    const results = await Promise.allSettled(symbols.map(s => _fetchStockQuote(s)));
+    return results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+  }
+
+  async function searchStocks(query) {
+    const url = new URL('https://query2.finance.yahoo.com/v1/finance/search');
+    url.searchParams.set('q', query);
+    url.searchParams.set('quotesCount', '8');
+    url.searchParams.set('newsCount', '0');
+    url.searchParams.set('listsCount', '0');
+    const resp = await fetch(url.toString());
+    if (!resp.ok) throw new Error(`Stock search ${resp.status}`);
+    const data = await resp.json();
+    return (data.quotes || [])
+      .filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
+      .slice(0, 8);
+  }
+
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, searchStocks };
 })();

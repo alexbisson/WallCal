@@ -931,3 +931,210 @@ img.emoji {
 .hidden {
   display: none !important;
 }
+
+/* ===== Stock Widget ===== */
+.stock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.stock-symbol {
+  font-size: 0.85em;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-name {
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-chart {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stock-sparkline {
+  display: block;
+}
+
+.stock-price-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.stock-price {
+  font-size: 0.85em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stock-change {
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.stock-pos {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+.stock-neg {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+/* ===== Stock Settings ===== */
+.stock-autocomplete {
+  margin-top: 8px;
+  position: relative;
+}
+
+#stock-search {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#stock-search:focus {
+  border-color: var(--accent);
+}
+
+#stock-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  list-style: none;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+#stock-suggestions li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+#stock-suggestions li:hover,
+#stock-suggestions li.active {
+  background: var(--surface-2);
+}
+
+.stock-sug-symbol {
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 5em;
+}
+
+.stock-sug-name {
+  flex: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-sug-exchange {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.stock-settings-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stock-settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.stock-settings-item > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stock-settings-symbol {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.stock-settings-name {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stock-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.stock-remove-btn:hover {
+  color: #f87171;
+}
