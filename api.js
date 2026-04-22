@@ -192,20 +192,22 @@ const Api = (() => {
   // ── Stock API (Yahoo Finance — no key required) ───────────────────────────
 
   async function _fetchStockQuote(symbol) {
-    const url = new URL(`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
+    const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
     url.searchParams.set('interval', '1d');
     url.searchParams.set('range', '1mo');
+    url.searchParams.set('corsDomain', 'finance.yahoo.com');
     const resp = await fetch(url.toString());
     if (!resp.ok) throw new Error(`Stock API ${resp.status}`);
     const data = await resp.json();
+    if (data.chart.error || !data.chart.result?.[0]) throw new Error('not found');
     const result = data.chart.result[0];
     const meta = result.meta;
-    const closes = (result.indicators.quote[0].close || []).filter(c => c !== null && !isNaN(c));
+    const closes = (result.indicators?.quote?.[0]?.close || []).filter(c => c !== null && !isNaN(c));
     return {
       symbol:        meta.symbol,
       name:          meta.shortName || meta.symbol,
       price:         meta.regularMarketPrice,
-      changePercent: meta.regularMarketChangePercent,
+      changePercent: meta.regularMarketChangePercent ?? 0,
       closes,
     };
   }
