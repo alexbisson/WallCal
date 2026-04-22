@@ -617,8 +617,11 @@ const Settings = (() => {
         _renderList();
         input.value = '';
         message.textContent = '';
-      } catch (_) {
-        message.textContent = `Symbol "${sym}" not found.`;
+      } catch (e) {
+        const isNetwork = e instanceof TypeError;
+        message.textContent = isNetwork
+          ? 'Could not reach the stock data service. Check your connection.'
+          : `"${sym}" was not found. Use the exact ticker (e.g. XEQT.TO for TSX stocks).`;
         message.className = 'settings-hint stock-add-message stock-add-error';
       } finally {
         addBtn.disabled = false;
