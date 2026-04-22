@@ -618,10 +618,13 @@ const Settings = (() => {
         input.value = '';
         message.textContent = '';
       } catch (e) {
-        const isNetwork = e instanceof TypeError;
-        message.textContent = isNetwork
-          ? 'Could not reach the stock data service. Check your connection.'
-          : `"${sym}" was not found. Use the exact ticker (e.g. XEQT.TO for TSX stocks).`;
+        if (e instanceof TypeError) {
+          message.textContent = 'Could not reach the stock data service. Check your connection.';
+        } else if (e.httpStatus) {
+          message.textContent = `Could not load "${sym}" (HTTP ${e.httpStatus}). Please try again.`;
+        } else {
+          message.textContent = `"${sym}" was not found. Use the exact ticker (e.g. XEQT.TO for TSX stocks).`;
+        }
         message.className = 'settings-hint stock-add-message stock-add-error';
       } finally {
         addBtn.disabled = false;

@@ -191,13 +191,35 @@ const Api = (() => {
 
   // ── Stock API (Yahoo Finance — no key required) ───────────────────────────
 
+  // Yahoo Finance requires a session crumb for authenticated endpoints.
+  // We fetch it once (best-effort with cookies) and cache it for the session.
+  let _yfCrumb = null;
+
+  async function _ensureYFCrumb() {
+    if (_yfCrumb !== null) return;
+    try {
+      const r = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+        credentials: 'include',
+      });
+      _yfCrumb = r.ok ? (await r.text()).trim() : '';
+    } catch (_) {
+      _yfCrumb = '';
+    }
+  }
+
   async function _fetchStockQuote(symbol) {
+    await _ensureYFCrumb();
     const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
     url.searchParams.set('interval', '1d');
     url.searchParams.set('range', '1mo');
     url.searchParams.set('corsDomain', 'finance.yahoo.com');
+    if (_yfCrumb) url.searchParams.set('crumb', _yfCrumb);
     const resp = await fetch(url.toString());
-    if (!resp.ok) throw new Error(`Stock API ${resp.status}`);
+    if (!resp.ok) {
+      const err = new Error('http');
+      err.httpStatus = resp.status;
+      throw err;
+    }
     const data = await resp.json();
     if (data.chart.error || !data.chart.result?.[0]) throw new Error('not found');
     const result = data.chart.result[0];
