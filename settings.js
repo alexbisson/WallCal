@@ -570,10 +570,10 @@ const Settings = (() => {
   }
 
   function _initStockControls() {
-    const list        = document.getElementById('stock-settings-list');
-    const input       = document.getElementById('stock-search');
-    const suggestions = document.getElementById('stock-suggestions');
-    let debounceTimer = null;
+    const list    = document.getElementById('stock-settings-list');
+    const input   = document.getElementById('stock-search');
+    const addBtn  = document.getElementById('stock-add-btn');
+    const message = document.getElementById('stock-add-message');
 
     function _renderList() {
       const stocks = getStockSymbols();
@@ -587,8 +587,7 @@ const Settings = (() => {
         btn.setAttribute('aria-label', `Remove ${s.symbol}`);
         btn.textContent = '✕';
         btn.addEventListener('click', () => {
-          const updated = getStockSymbols().filter((_, j) => j !== i);
-          _saveStocks(updated);
+          _saveStocks(getStockSymbols().filter((_, j) => j !== i));
           _renderList();
         });
         li.appendChild(btn);
@@ -596,67 +595,39 @@ const Settings = (() => {
       });
     }
 
-    function _addStock(symbol, name) {
-      const stocks = getStockSymbols();
-      if (!stocks.find(s => s.symbol === symbol)) {
-        _saveStocks([...stocks, { symbol, name }]);
+    async function _handleAdd() {
+      const sym = input.value.trim().toUpperCase();
+      if (!sym) return;
+
+      if (getStockSymbols().find(s => s.symbol === sym)) {
+        message.textContent = `${sym} is already in your list.`;
+        message.className = 'settings-hint stock-add-message';
+        return;
+      }
+
+      addBtn.disabled = true;
+      message.textContent = 'Validating…';
+      message.className = 'settings-hint stock-add-message';
+
+      try {
+        const quotes = await Api.fetchStockQuotes([sym]);
+        if (!quotes.length) throw new Error('not found');
+        const q = quotes[0];
+        _saveStocks([...getStockSymbols(), { symbol: q.symbol, name: q.name }]);
         _renderList();
+        input.value = '';
+        message.textContent = '';
+      } catch (_) {
+        message.textContent = `Symbol "${sym}" not found.`;
+        message.className = 'settings-hint stock-add-message stock-add-error';
+      } finally {
+        addBtn.disabled = false;
       }
-      input.value = '';
-      suggestions.classList.add('hidden');
     }
 
-    function _showSuggestions(results) {
-      suggestions.innerHTML = '';
-      if (!results.length) { suggestions.classList.add('hidden'); return; }
-      results.forEach(q => {
-        const li = document.createElement('li');
-        const exchange = q.exchDisp || q.exchange || '';
-        li.innerHTML = `<span class="stock-sug-symbol">${q.symbol}</span><span class="stock-sug-name">${q.shortname || q.longname || ''}</span><span class="stock-sug-exchange">${exchange}</span>`;
-        li.addEventListener('mousedown', e => {
-          e.preventDefault();
-          _addStock(q.symbol, q.shortname || q.longname || q.symbol);
-        });
-        suggestions.appendChild(li);
-      });
-      suggestions.classList.remove('hidden');
-    }
-
-    input.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      const q = input.value.trim();
-      if (q.length < 1) { suggestions.classList.add('hidden'); return; }
-      debounceTimer = setTimeout(async () => {
-        try {
-          const results = await Api.searchStocks(q);
-          _showSuggestions(results);
-        } catch (_) { suggestions.classList.add('hidden'); }
-      }, 250);
-    });
-
-    input.addEventListener('blur', () => {
-      setTimeout(() => suggestions.classList.add('hidden'), 150);
-    });
-
+    addBtn.addEventListener('click', _handleAdd);
     input.addEventListener('keydown', e => {
-      const items = suggestions.querySelectorAll('li');
-      const active = suggestions.querySelector('li.active');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const next = active ? active.nextElementSibling : items[0];
-        if (active) active.classList.remove('active');
-        if (next) next.classList.add('active');
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const prev = active ? active.previousElementSibling : items[items.length - 1];
-        if (active) active.classList.remove('active');
-        if (prev) prev.classList.add('active');
-      } else if (e.key === 'Enter' && active) {
-        e.preventDefault();
-        active.dispatchEvent(new MouseEvent('mousedown'));
-      } else if (e.key === 'Escape') {
-        suggestions.classList.add('hidden');
-      }
+      if (e.key === 'Enter') { e.preventDefault(); _handleAdd(); }
     });
 
     _renderList();
