@@ -581,7 +581,7 @@ const Settings = (() => {
       stocks.forEach((s, i) => {
         const li = document.createElement('li');
         li.className = 'stock-settings-item';
-        li.innerHTML = `<div><span class="stock-settings-symbol">${s.symbol}</span><span class="stock-settings-name">${s.name}</span></div>`;
+        li.innerHTML = `<div><span class="stock-settings-symbol">${s.symbol}</span></div>`;
         const btn = document.createElement('button');
         btn.className = 'stock-remove-btn';
         btn.setAttribute('aria-label', `Remove ${s.symbol}`);
@@ -612,19 +612,14 @@ const Settings = (() => {
       try {
         const quotes = await Api.fetchStockQuotes([sym]);
         if (!quotes.length) throw new Error('not found');
-        const q = quotes[0];
-        _saveStocks([...getStockSymbols(), { symbol: q.symbol, name: q.name }]);
+        _saveStocks([...getStockSymbols(), { symbol: quotes[0].symbol }]);
         _renderList();
         input.value = '';
         message.textContent = '';
       } catch (e) {
-        if (e instanceof TypeError) {
-          message.textContent = 'Could not reach the stock data service. Check your connection.';
-        } else if (e.httpStatus) {
-          message.textContent = `Could not load "${sym}" (HTTP ${e.httpStatus}). Please try again.`;
-        } else {
-          message.textContent = `"${sym}" was not found. Use the exact ticker (e.g. XEQT.TO for TSX stocks).`;
-        }
+        message.textContent = e instanceof TypeError
+          ? 'Could not reach the stock data service. Check your connection.'
+          : `"${sym}" was not found. Check the ticker (e.g. AAPL, XEQT.TO for TSX).`;
         message.className = 'settings-hint stock-add-message stock-add-error';
       } finally {
         addBtn.disabled = false;

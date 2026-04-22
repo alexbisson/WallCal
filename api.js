@@ -189,49 +189,34 @@ const Api = (() => {
     return resp.json();
   }
 
-  // ── Stock API (Yahoo Finance — no key required) ───────────────────────────
+  // ── Stock API (Stooq — no key, CORS-friendly) ────────────────────────────
 
-  // Yahoo Finance requires a session crumb for authenticated endpoints.
-  // We fetch it once (best-effort with cookies) and cache it for the session.
-  let _yfCrumb = null;
-
-  async function _ensureYFCrumb() {
-    if (_yfCrumb !== null) return;
-    try {
-      const r = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
-        credentials: 'include',
-      });
-      _yfCrumb = r.ok ? (await r.text()).trim() : '';
-    } catch (_) {
-      _yfCrumb = '';
-    }
+  // Stooq uses .CA for TSX and requires .US for bare US symbols.
+  function _toStooqSymbol(symbol) {
+    if (/\.TO$/i.test(symbol)) return symbol.slice(0, -3) + '.CA';
+    if (!symbol.includes('.'))  return symbol + '.US';
+    return symbol;
   }
 
   async function _fetchStockQuote(symbol) {
-    await _ensureYFCrumb();
-    const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
-    url.searchParams.set('interval', '1d');
-    url.searchParams.set('range', '1mo');
-    url.searchParams.set('corsDomain', 'finance.yahoo.com');
-    if (_yfCrumb) url.searchParams.set('crumb', _yfCrumb);
-    const resp = await fetch(url.toString());
-    if (!resp.ok) {
-      const err = new Error('http');
-      err.httpStatus = resp.status;
-      throw err;
-    }
-    const data = await resp.json();
-    if (data.chart.error || !data.chart.result?.[0]) throw new Error('not found');
-    const result = data.chart.result[0];
-    const meta = result.meta;
-    const closes = (result.indicators?.quote?.[0]?.close || []).filter(c => c !== null && !isNaN(c));
-    return {
-      symbol:        meta.symbol,
-      name:          meta.shortName || meta.symbol,
-      price:         meta.regularMarketPrice,
-      changePercent: meta.regularMarketChangePercent ?? 0,
-      closes,
-    };
+    const s = _toStooqSymbol(symbol);
+    const now   = new Date();
+    const d2    = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const past  = new Date(now); past.setDate(past.getDate() - 45);
+    const d1    = past.toISOString().slice(0, 10).replace(/-/g, '');
+    const url   = `https://stooq.com/q/d/l/?s=${encodeURIComponent(s)}&d1=${d1}&d2=${d2}&i=d`;
+    const resp  = await fetch(url);
+    if (!resp.ok) throw new Error(`Stock API ${resp.status}`);
+    const text  = await resp.text();
+    if (!text.startsWith('Date,')) throw new Error('not found');
+    const rows  = text.trim().split('\n').slice(1)   // drop header
+      .map(l => parseFloat(l.split(',')[4]))          // Close is index 4
+      .filter(c => !isNaN(c));                        // Stooq returns newest first
+    if (rows.length < 2) throw new Error('not found');
+    const price         = rows[0];
+    const changePercent = ((rows[0] - rows[1]) / rows[1]) * 100;
+    const closes        = rows.slice(0, 30).reverse(); // oldest→newest for sparkline
+    return { symbol, price, changePercent, closes };
   }
 
   async function fetchStockQuotes(symbols) {
@@ -241,19 +226,5 @@ const Api = (() => {
       .map(r => r.value);
   }
 
-  async function searchStocks(query) {
-    const url = new URL('https://query2.finance.yahoo.com/v1/finance/search');
-    url.searchParams.set('q', query);
-    url.searchParams.set('quotesCount', '8');
-    url.searchParams.set('newsCount', '0');
-    url.searchParams.set('listsCount', '0');
-    const resp = await fetch(url.toString());
-    if (!resp.ok) throw new Error(`Stock search ${resp.status}`);
-    const data = await resp.json();
-    return (data.quotes || [])
-      .filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
-      .slice(0, 8);
-  }
-
-  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, searchStocks };
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes };
 })();

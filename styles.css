@@ -945,29 +945,12 @@ img.emoji {
   gap: 8px;
 }
 
-.stock-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  width: 90px;
-  flex-shrink: 0;
-}
-
 .stock-symbol {
   font-size: 0.85em;
   font-weight: 700;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stock-name {
-  font-size: 0.7em;
-  color: rgba(255, 255, 255, 0.5);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
+  width: 72px;
 }
 
 .stock-chart {

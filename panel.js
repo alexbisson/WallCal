@@ -401,10 +401,7 @@ const Panel = (() => {
       const price = q.price.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const chart = _sparkline(q.closes, pos);
       return `<div class="stock-row">
-        <div class="stock-meta">
-          <span class="stock-symbol">${q.symbol}</span>
-          <span class="stock-name">${q.name}</span>
-        </div>
+        <span class="stock-symbol">${q.symbol}</span>
         <div class="stock-chart">${chart}</div>
         <div class="stock-price-col">
           <span class="stock-price">${price}</span>
