@@ -199,19 +199,24 @@ const Api = (() => {
   }
 
   async function _fetchStockQuote(symbol) {
-    const s = _toStooqSymbol(symbol);
-    const now   = new Date();
-    const d2    = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const past  = new Date(now); past.setDate(past.getDate() - 45);
-    const d1    = past.toISOString().slice(0, 10).replace(/-/g, '');
-    const url   = `https://stooq.com/q/d/l/?s=${encodeURIComponent(s)}&d1=${d1}&d2=${d2}&i=d`;
-    const resp  = await fetch(url);
-    if (!resp.ok) throw new Error(`Stock API ${resp.status}`);
+    const s         = _toStooqSymbol(symbol);
+    // Stooq's download endpoint checks Referer and returns HTML when called
+    // directly from a browser. Route through corsproxy.io so the request
+    // originates from a neutral server and always gets back CSV.
+    const stooqUrl  = `https://stooq.com/q/d/l/?s=${encodeURIComponent(s)}&i=d`;
+    const resp      = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(stooqUrl)}`);
+    if (!resp.ok) {
+      const err = new Error('http');
+      err.httpStatus = resp.status;
+      throw err;
+    }
     const text  = await resp.text();
-    if (!text.startsWith('Date,')) throw new Error('not found');
-    const rows  = text.trim().split('\n').slice(1)   // drop header
-      .map(l => parseFloat(l.split(',')[4]))          // Close is index 4
-      .filter(c => !isNaN(c));                        // Stooq returns newest first
+    // Strip optional UTF-8 BOM and validate we got CSV, not an HTML error page.
+    const clean = text.replace(/^﻿/, '').trim();
+    if (!clean.startsWith('Date,')) throw new Error('not found');
+    const rows  = clean.split('\n').slice(1)       // drop header row
+      .map(l => parseFloat(l.split(',')[4]))        // Close is column index 4
+      .filter(c => !isNaN(c));                      // Stooq returns newest row first
     if (rows.length < 2) throw new Error('not found');
     const price         = rows[0];
     const changePercent = ((rows[0] - rows[1]) / rows[1]) * 100;
