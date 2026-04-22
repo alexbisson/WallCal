@@ -37,10 +37,18 @@ const Panel = (() => {
   async function refreshWeather() {
     const loc = JSON.parse(localStorage.getItem(LOCATION_KEY) || 'null');
     if (!loc) return;
-    try {
-      const data = await Api.fetchWeather(loc.lat, loc.lng);
-      _renderWeather(data);
-    } catch (_) { /* stay hidden on error */ }
+    const delays = [5000, 15000, 45000];
+    for (let attempt = 0; attempt <= delays.length; attempt++) {
+      try {
+        const data = await Api.fetchWeather(loc.lat, loc.lng);
+        _renderWeather(data);
+        return;
+      } catch (_) {
+        if (attempt < delays.length) {
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+    }
   }
 
   function _renderWeather(data) {
