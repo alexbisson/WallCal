@@ -22,6 +22,7 @@
         <div id="panel-date"></div>
       </div>
       <div id="panel-weather" class="panel-card hidden"></div>
+      <div id="panel-stocks" class="panel-card hidden"></div>
       <div id="panel-tasks" class="panel-card hidden">
         <h2 class="panel-section-title">Reminders</h2>
         <ul id="panel-tasks-list"></ul>
@@ -111,6 +112,15 @@
       <div class="city-autocomplete">
         <input type="text" id="city-search" placeholder="Search city…" autocomplete="off" spellcheck="false">
         <ul id="city-suggestions" class="hidden"></ul>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h3>Stocks</h3>
+      <ul id="stock-settings-list" class="stock-settings-list"></ul>
+      <div class="stock-autocomplete">
+        <input type="text" id="stock-search" placeholder="Search symbol or company…" autocomplete="off" spellcheck="false">
+        <ul id="stock-suggestions" class="hidden"></ul>
       </div>
     </section>
 
