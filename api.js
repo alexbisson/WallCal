@@ -205,6 +205,31 @@ const Api = (() => {
     return (localStorage.getItem(FMP_KEY) || '').trim();
   }
 
+  async function _fmpFetch(symbolList, apiKey) {
+    const url = `https://financialmodelingprep.com/stable/quote?symbol=${symbolList.join(',')}&apikey=${encodeURIComponent(apiKey)}`;
+    const resp = await fetch(url);
+    if (resp.status === 401 || resp.status === 403) {
+      const err = new Error('bad_key');
+      err.code = 'bad_key';
+      throw err;
+    }
+    if (!resp.ok) throw new Error('http');
+    const data = await resp.json();
+    // FMP returns a plain object (not array) on auth/plan errors that return 200.
+    if (!Array.isArray(data)) {
+      const err = new Error('bad_key');
+      err.code = 'bad_key';
+      throw err;
+    }
+    console.debug('[FMP]', symbolList.join(','), '→', data);
+    return data.map(q => ({
+      symbol:        q.symbol,
+      price:         q.price,
+      changePercent: q.changesPercentage ?? 0,
+      previousClose: q.previousClose,
+    }));
+  }
+
   async function fetchStockQuotes(symbols) {
     const apiKey = getFmpKey();
     if (!apiKey) {
@@ -212,32 +237,24 @@ const Api = (() => {
       err.code = 'no_api_key';
       throw err;
     }
-    // FMP migrated from /api/v3/quote/{symbol} (legacy) to /stable/quote?symbol=
-    // New keys only work with the stable endpoint.
-    // Commas must not be percent-encoded; individual symbols are safe as-is.
-    const url = `https://financialmodelingprep.com/stable/quote?symbol=${symbols.join(',')}&apikey=${encodeURIComponent(apiKey)}`;
-    const resp = await fetch(url);
-    if (resp.status === 401 || resp.status === 403) {
-      const err = new Error('bad_key');
-      err.code = 'bad_key';
-      throw err;
+    // Fetch all symbols in one call (counts as 1 against the daily quota).
+    const quotes = await _fmpFetch(symbols, apiKey);
+
+    // FMP free tier may not return data for TSX (.TO) symbols. If any were
+    // missing, retry each without the .TO suffix — FMP sometimes lists Canadian
+    // symbols as bare tickers (XEQT instead of XEQT.TO).
+    const found   = new Set(quotes.map(q => q.symbol));
+    const missing = symbols.filter(s => !found.has(s) && /\.TO$/i.test(s));
+    if (missing.length) {
+      const bare    = missing.map(s => s.replace(/\.TO$/i, ''));
+      const extras  = await _fmpFetch(bare, apiKey).catch(() => []);
+      // Re-label bare tickers with their original .TO form so the panel
+      // displays the symbol exactly as the user entered it.
+      const relabelled = extras.map((q, i) => ({ ...q, symbol: missing[i] }));
+      quotes.push(...relabelled);
     }
-    if (!resp.ok) {
-      throw new Error('http');
-    }
-    const data = await resp.json();
-    // FMP returns a plain object (not array) on auth/plan errors that slip through as 200.
-    if (!Array.isArray(data)) {
-      const err = new Error('bad_key');
-      err.code = 'bad_key';
-      throw err;
-    }
-    return data.map(q => ({
-      symbol:        q.symbol,
-      price:         q.price,
-      changePercent: q.changesPercentage ?? 0,
-      previousClose: q.previousClose,
-    }));
+
+    return quotes;
   }
 
   return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, getFmpKey };
