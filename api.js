@@ -212,21 +212,24 @@ const Api = (() => {
       err.code = 'no_api_key';
       throw err;
     }
-    const joined = symbols.map(encodeURIComponent).join(',');
-    const resp = await fetch(
-      `https://financialmodelingprep.com/api/v3/quote/${joined}?apikey=${encodeURIComponent(apiKey)}`
-    );
-    if (!resp.ok) {
-      const err = new Error(resp.status === 401 || resp.status === 403 ? 'bad_key' : 'http');
-      err.code = err.message;
+    // FMP migrated from /api/v3/quote/{symbol} (legacy) to /stable/quote?symbol=
+    // New keys only work with the stable endpoint.
+    // Commas must not be percent-encoded; individual symbols are safe as-is.
+    const url = `https://financialmodelingprep.com/stable/quote?symbol=${symbols.join(',')}&apikey=${encodeURIComponent(apiKey)}`;
+    const resp = await fetch(url);
+    if (resp.status === 401 || resp.status === 403) {
+      const err = new Error('bad_key');
+      err.code = 'bad_key';
       throw err;
     }
+    if (!resp.ok) {
+      throw new Error('http');
+    }
     const data = await resp.json();
-    // FMP returns a plain object with "Error Message" on auth/rate-limit failure.
+    // FMP returns a plain object (not array) on auth/plan errors that slip through as 200.
     if (!Array.isArray(data)) {
-      const msg = data?.['Error Message'] || data?.error || '';
-      const err = new Error(msg.toLowerCase().includes('invalid') ? 'bad_key' : 'http');
-      err.code = err.message;
+      const err = new Error('bad_key');
+      err.code = 'bad_key';
       throw err;
     }
     return data.map(q => ({
