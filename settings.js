@@ -11,7 +11,7 @@ const Settings = (() => {
   const TASKS_LIST_KEY       = 'wallcal_tasks_list';
   const REMINDER_WINDOW_KEY  = 'wallcal_reminder_window';
   const STOCKS_KEY           = 'wallcal_stocks';
-  const FINNHUB_KEY          = 'wallcal_finnhub_key';
+  const FMP_KEY              = 'wallcal_fmp_key';
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
@@ -575,13 +575,13 @@ const Settings = (() => {
     const input   = document.getElementById('stock-search');
     const addBtn  = document.getElementById('stock-add-btn');
     const message = document.getElementById('stock-add-message');
-    const keyEl   = document.getElementById('finnhub-key-input');
+    const keyEl   = document.getElementById('fmp-key-input');
 
-    keyEl.value = localStorage.getItem(FINNHUB_KEY) || '';
+    keyEl.value = localStorage.getItem(FMP_KEY) || '';
     keyEl.addEventListener('change', () => {
       const v = keyEl.value.trim();
-      if (v) localStorage.setItem(FINNHUB_KEY, v);
-      else   localStorage.removeItem(FINNHUB_KEY);
+      if (v) localStorage.setItem(FMP_KEY, v);
+      else   localStorage.removeItem(FMP_KEY);
       Panel.refreshStocks();
     });
 
@@ -628,10 +628,10 @@ const Settings = (() => {
         message.textContent = '';
       } catch (e) {
         let text;
-        if (e && e.code === 'no_api_key')               text = 'Add a Finnhub API key above before adding stocks.';
+        if (e && e.code === 'no_api_key')               text = 'Add a Financial Modeling Prep API key above before adding stocks.';
         else if (e instanceof TypeError)                text = 'Could not reach the stock data service. Check your connection.';
-        else if (e && (e.code === 'bad_key' || e.message === 'bad_key')) text = 'Finnhub rejected the API key. Check it for typos.';
-        else                                            text = `"${sym}" was not found. Check the ticker (e.g. AAPL, SHOP.TO for TSX).`;
+        else if (e && e.code === 'bad_key')             text = 'FMP rejected the API key. Check it for typos.';
+        else                                            text = `"${sym}" was not found. Check the ticker (e.g. AAPL, XEQT.TO for TSX).`;
         message.textContent = text;
         message.className = 'settings-hint stock-add-message stock-add-error';
       } finally {
