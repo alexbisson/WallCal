@@ -117,6 +117,17 @@
 
     <section class="settings-section">
       <h3>Stocks</h3>
+      <div class="field-group">
+        <label for="finnhub-key-input">Finnhub API key</label>
+        <input
+          type="password"
+          id="finnhub-key-input"
+          placeholder="Paste your Finnhub API key"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <p class="settings-hint">Free key from <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io</a> — 60 calls/minute.</p>
+      </div>
       <ul id="stock-settings-list" class="stock-settings-list"></ul>
       <div class="stock-add-row">
         <input type="text" id="stock-search" placeholder="Symbol, e.g. AAPL or SHOP.TO" autocomplete="off" spellcheck="false">

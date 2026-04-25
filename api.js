@@ -189,47 +189,62 @@ const Api = (() => {
     return resp.json();
   }
 
-  // ── Stock API (Stooq — no key, CORS-friendly) ────────────────────────────
+  // ── Stock API (Finnhub — free 60 calls/min, native CORS) ─────────────────
+  //
+  // Finnhub's /quote endpoint is free, browser-friendly (CORS), and reliable.
+  // It requires a free API key (sign up at finnhub.io). Symbol format follows
+  // Yahoo conventions: bare ticker for US (AAPL), .TO suffix for TSX (SHOP.TO).
+  //
+  // Sparklines are accumulated client-side (see Panel._stockHistory) because
+  // Finnhub's /stock/candle endpoint moved to premium in 2024.
+  const FINNHUB_KEY = 'wallcal_finnhub_key';
 
-  // Stooq uses .CA for TSX and requires .US for bare US symbols.
-  function _toStooqSymbol(symbol) {
-    if (/\.TO$/i.test(symbol)) return symbol.slice(0, -3) + '.CA';
-    if (!symbol.includes('.'))  return symbol + '.US';
-    return symbol;
+  function getFinnhubKey() {
+    return (localStorage.getItem(FINNHUB_KEY) || '').trim();
   }
 
-  async function _fetchStockQuote(symbol) {
-    const s         = _toStooqSymbol(symbol);
-    // Stooq's download endpoint checks Referer and returns HTML when called
-    // directly from a browser. Route through corsproxy.io so the request
-    // originates from a neutral server and always gets back CSV.
-    const stooqUrl  = `https://stooq.com/q/d/l/?s=${encodeURIComponent(s)}&i=d`;
-    const resp      = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(stooqUrl)}`);
+  async function _fetchStockQuote(symbol, apiKey) {
+    const url = new URL('https://finnhub.io/api/v1/quote');
+    url.searchParams.set('symbol', symbol);
+    url.searchParams.set('token',  apiKey);
+    const resp = await fetch(url.toString());
     if (!resp.ok) {
-      const err = new Error('http');
+      const err = new Error(resp.status === 401 || resp.status === 403 ? 'bad_key' : 'http');
       err.httpStatus = resp.status;
       throw err;
     }
-    const text  = await resp.text();
-    // Strip optional UTF-8 BOM and validate we got CSV, not an HTML error page.
-    const clean = text.replace(/^﻿/, '').trim();
-    if (!clean.startsWith('Date,')) throw new Error('not found');
-    const rows  = clean.split('\n').slice(1)       // drop header row
-      .map(l => parseFloat(l.split(',')[4]))        // Close is column index 4
-      .filter(c => !isNaN(c));                      // Stooq returns newest row first
-    if (rows.length < 2) throw new Error('not found');
-    const price         = rows[0];
-    const changePercent = ((rows[0] - rows[1]) / rows[1]) * 100;
-    const closes        = rows.slice(0, 30).reverse(); // oldest→newest for sparkline
-    return { symbol, price, changePercent, closes };
+    const data = await resp.json();
+    // Finnhub returns all-zeros for unknown symbols rather than an HTTP error.
+    if (!data || !data.c || (data.c === 0 && data.pc === 0)) {
+      throw new Error('not found');
+    }
+    return {
+      symbol,
+      price:         data.c,
+      changePercent: data.dp ?? 0,
+      previousClose: data.pc,
+    };
   }
 
   async function fetchStockQuotes(symbols) {
-    const results = await Promise.allSettled(symbols.map(s => _fetchStockQuote(s)));
+    const apiKey = getFinnhubKey();
+    if (!apiKey) {
+      const err = new Error('no_api_key');
+      err.code = 'no_api_key';
+      throw err;
+    }
+    const results = await Promise.allSettled(symbols.map(s => _fetchStockQuote(s, apiKey)));
+    // If every call failed because the key was rejected, propagate so callers
+    // can show "bad key" instead of misleading "symbol not found".
+    if (results.length && results.every(r => r.status === 'rejected' && r.reason?.message === 'bad_key')) {
+      const err = new Error('bad_key');
+      err.code = 'bad_key';
+      throw err;
+    }
     return results
       .filter(r => r.status === 'fulfilled')
       .map(r => r.value);
   }
 
-  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes };
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, getFinnhubKey };
 })();

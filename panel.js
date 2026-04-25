@@ -4,10 +4,12 @@
 // Depends on: Auth, Api
 // Exposes: init(), refreshWeather(), refreshTasks(), refreshStocks()
 const Panel = (() => {
-  const LOCATION_KEY = 'wallcal_location';
-  const TASKS_KEY    = 'wallcal_tasks_list';
-  const STOCKS_KEY   = 'wallcal_stocks';
-  const QUOTE_TTL    = 60 * 60 * 1000; // refresh quote every hour
+  const LOCATION_KEY        = 'wallcal_location';
+  const TASKS_KEY           = 'wallcal_tasks_list';
+  const STOCKS_KEY          = 'wallcal_stocks';
+  const STOCKS_HISTORY_KEY  = 'wallcal_stocks_history';
+  const STOCKS_HISTORY_MAX  = 60; // ~5 hours at 5-min refresh cadence
+  const QUOTE_TTL           = 60 * 60 * 1000; // refresh quote every hour
 
   // ── Clock ──────────────────────────────────────────────────────────────────
 
@@ -368,6 +370,25 @@ const Panel = (() => {
     </svg>`;
   }
 
+  function _loadStockHistory() {
+    try { return JSON.parse(localStorage.getItem(STOCKS_HISTORY_KEY) || '{}'); }
+    catch (_) { return {}; }
+  }
+
+  function _appendStockHistory(quotes) {
+    const history = _loadStockHistory();
+    for (const q of quotes) {
+      const arr = history[q.symbol] || [];
+      arr.push(q.price);
+      if (arr.length > STOCKS_HISTORY_MAX) arr.splice(0, arr.length - STOCKS_HISTORY_MAX);
+      history[q.symbol] = arr;
+    }
+    // Drop history entries for symbols no longer tracked.
+    const tracked = new Set(JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol));
+    for (const k of Object.keys(history)) if (!tracked.has(k)) delete history[k];
+    localStorage.setItem(STOCKS_HISTORY_KEY, JSON.stringify(history));
+  }
+
   async function refreshStocks() {
     const dow = new Date().getDay();
     const section = document.getElementById('panel-stocks');
@@ -380,9 +401,12 @@ const Panel = (() => {
     for (let attempt = 0; attempt <= delays.length; attempt++) {
       try {
         const quotes = await Api.fetchStockQuotes(symbols);
+        _appendStockHistory(quotes);
         _renderStocks(quotes);
         return;
-      } catch (_) {
+      } catch (e) {
+        // Missing API key is permanent — don't retry, just hide the widget.
+        if (e && e.code === 'no_api_key') { section.classList.add('hidden'); return; }
         if (attempt < delays.length) {
           await new Promise(r => setTimeout(r, delays[attempt]));
         }
@@ -394,12 +418,13 @@ const Panel = (() => {
     const section = document.getElementById('panel-stocks');
     if (!quotes.length) { section.classList.add('hidden'); return; }
 
+    const history = _loadStockHistory();
     const rows = quotes.map(q => {
       const pos = q.changePercent >= 0;
       const sign = pos ? '+' : '';
       const pct = `${sign}${q.changePercent.toFixed(2)}%`;
       const price = q.price.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const chart = _sparkline(q.closes, pos);
+      const chart = _sparkline(history[q.symbol] || [], pos);
       return `<div class="stock-row">
         <span class="stock-symbol">${q.symbol}</span>
         <div class="stock-chart">${chart}</div>
