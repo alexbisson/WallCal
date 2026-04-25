@@ -189,62 +189,53 @@ const Api = (() => {
     return resp.json();
   }
 
-  // ── Stock API (Finnhub — free 60 calls/min, native CORS) ─────────────────
+  // ── Stock API (Financial Modeling Prep — free 250 calls/day, native CORS) ──
   //
-  // Finnhub's /quote endpoint is free, browser-friendly (CORS), and reliable.
-  // It requires a free API key (sign up at finnhub.io). Symbol format follows
-  // Yahoo conventions: bare ticker for US (AAPL), .TO suffix for TSX (SHOP.TO).
+  // FMP supports both US (AAPL) and Canadian TSX (XEQT.TO, SHOP.TO) stocks
+  // with native CORS, no proxy required. Free key at financialmodelingprep.com.
   //
-  // Sparklines are accumulated client-side (see Panel._stockHistory) because
-  // Finnhub's /stock/candle endpoint moved to premium in 2024.
-  const FINNHUB_KEY = 'wallcal_finnhub_key';
+  // All symbols are fetched in a single batch call per refresh, so daily
+  // usage stays well within the 250 call/day free limit.
+  //
+  // Sparklines are accumulated client-side (see panel.js _appendStockHistory)
+  // since historical-price endpoints count against the daily quota.
+  const FMP_KEY = 'wallcal_fmp_key';
 
-  function getFinnhubKey() {
-    return (localStorage.getItem(FINNHUB_KEY) || '').trim();
-  }
-
-  async function _fetchStockQuote(symbol, apiKey) {
-    const url = new URL('https://finnhub.io/api/v1/quote');
-    url.searchParams.set('symbol', symbol);
-    url.searchParams.set('token',  apiKey);
-    const resp = await fetch(url.toString());
-    if (!resp.ok) {
-      const err = new Error(resp.status === 401 || resp.status === 403 ? 'bad_key' : 'http');
-      err.httpStatus = resp.status;
-      throw err;
-    }
-    const data = await resp.json();
-    // Finnhub returns all-zeros for unknown symbols rather than an HTTP error.
-    if (!data || !data.c || (data.c === 0 && data.pc === 0)) {
-      throw new Error('not found');
-    }
-    return {
-      symbol,
-      price:         data.c,
-      changePercent: data.dp ?? 0,
-      previousClose: data.pc,
-    };
+  function getFmpKey() {
+    return (localStorage.getItem(FMP_KEY) || '').trim();
   }
 
   async function fetchStockQuotes(symbols) {
-    const apiKey = getFinnhubKey();
+    const apiKey = getFmpKey();
     if (!apiKey) {
       const err = new Error('no_api_key');
       err.code = 'no_api_key';
       throw err;
     }
-    const results = await Promise.allSettled(symbols.map(s => _fetchStockQuote(s, apiKey)));
-    // If every call failed because the key was rejected, propagate so callers
-    // can show "bad key" instead of misleading "symbol not found".
-    if (results.length && results.every(r => r.status === 'rejected' && r.reason?.message === 'bad_key')) {
-      const err = new Error('bad_key');
-      err.code = 'bad_key';
+    const joined = symbols.map(encodeURIComponent).join(',');
+    const resp = await fetch(
+      `https://financialmodelingprep.com/api/v3/quote/${joined}?apikey=${encodeURIComponent(apiKey)}`
+    );
+    if (!resp.ok) {
+      const err = new Error(resp.status === 401 || resp.status === 403 ? 'bad_key' : 'http');
+      err.code = err.message;
       throw err;
     }
-    return results
-      .filter(r => r.status === 'fulfilled')
-      .map(r => r.value);
+    const data = await resp.json();
+    // FMP returns a plain object with "Error Message" on auth/rate-limit failure.
+    if (!Array.isArray(data)) {
+      const msg = data?.['Error Message'] || data?.error || '';
+      const err = new Error(msg.toLowerCase().includes('invalid') ? 'bad_key' : 'http');
+      err.code = err.message;
+      throw err;
+    }
+    return data.map(q => ({
+      symbol:        q.symbol,
+      price:         q.price,
+      changePercent: q.changesPercentage ?? 0,
+      previousClose: q.previousClose,
+    }));
   }
 
-  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, getFinnhubKey };
+  return { fetchCalendars, fetchColors, fetchAllEvents, fetchTaskLists, fetchTasks, fetchTaskEvents, fetchWeather, fetchStockQuotes, getFmpKey };
 })();
