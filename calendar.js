@@ -240,7 +240,21 @@ const Calendar = (() => {
 
   function showUnauthenticated() {
     const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '<div class="auth-prompt">Open settings ⚙ to connect Google Calendar.</div>';
+    grid.innerHTML = `
+      <div class="auth-prompt">
+        <div class="auth-prompt-content">
+          <h1 class="auth-prompt-title">WallCal</h1>
+          <p class="auth-prompt-tagline">A read-only Google Calendar display for wall-mounted screens.</p>
+          <p class="auth-prompt-desc">Connects to your Google account to render your existing calendars, events, and Google Tasks reminders in a clean monthly grid. Read-only — nothing is ever created, edited, or sent to a third-party server.</p>
+          <p class="auth-prompt-cta">Open settings ⚙ to connect Google Calendar.</p>
+          <p class="auth-prompt-links">
+            <a href="/privacy.html">Privacy policy</a>
+            <span class="auth-prompt-sep">·</span>
+            <a href="mailto:alex.bisson@gmail.com">Contact</a>
+          </p>
+        </div>
+      </div>
+    `;
     document.getElementById('month-label').textContent = '';
     _setStatus('');
   }

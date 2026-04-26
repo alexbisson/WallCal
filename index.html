@@ -34,6 +34,7 @@
       <span id="month-label"></span>
       <div id="header-actions">
         <button id="reload-btn" aria-label="Reload" title="Reload" onclick="location.reload()">↻</button>
+        <button id="info-btn" aria-label="About WallCal" title="About">ℹ️</button>
         <button id="settings-btn" aria-label="Settings" title="Settings">⚙️</button>
       </div>
     </header>
@@ -46,6 +47,24 @@
   </div>
 
   <div id="settings-overlay" class="hidden"></div>
+
+  <div id="info-overlay" class="hidden"></div>
+  <div id="info-modal" class="hidden" role="dialog" aria-labelledby="info-title" aria-modal="true">
+    <div class="info-modal-header">
+      <h2 id="info-title">WallCal</h2>
+      <button id="info-close" aria-label="Close">✕</button>
+    </div>
+    <div class="info-modal-body">
+      <p class="info-tagline">A read-only Google Calendar display for wall-mounted screens.</p>
+      <p>WallCal connects to your Google account and renders your existing calendars, events, and Google Tasks reminders in a clean monthly grid — designed to be left running on a dedicated wall display.</p>
+      <p>WallCal is read-only: it never creates, edits, or deletes any of your data. Calendar and task data is fetched directly into your browser and never sent to a third-party server. Tokens and preferences are stored only in your browser's local storage.</p>
+      <p class="info-links">
+        <a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a>
+        <span class="info-sep">·</span>
+        <a href="mailto:alex.bisson@gmail.com">Contact</a>
+      </p>
+    </div>
+  </div>
 
   <aside id="settings-panel" class="hidden" aria-label="Settings panel">
     <div class="settings-header">
