@@ -337,7 +337,8 @@ img.emoji {
 }
 
 #settings-btn,
-#reload-btn {
+#reload-btn,
+#info-btn {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -350,7 +351,8 @@ img.emoji {
 }
 
 #settings-btn:hover,
-#reload-btn:hover {
+#reload-btn:hover,
+#info-btn:hover {
   color: var(--text);
   background: var(--surface-2);
 }
@@ -522,10 +524,60 @@ img.emoji {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-muted);
-  font-size: 1em;
   text-align: center;
   padding: 2rem;
+}
+
+.auth-prompt-content {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-prompt-title {
+  font-size: 2.6rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.auth-prompt-tagline {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.auth-prompt-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 4px;
+}
+
+.auth-prompt-cta {
+  font-size: 1rem;
+  color: var(--accent);
+  margin-top: 12px;
+}
+
+.auth-prompt-links {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 18px;
+}
+
+.auth-prompt-links a {
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.auth-prompt-links a:hover {
+  color: var(--text);
+}
+
+.auth-prompt-sep {
+  margin: 0 8px;
 }
 
 /* ===== Settings Overlay ===== */
@@ -534,6 +586,103 @@ img.emoji {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
+}
+
+/* ===== Info Modal ===== */
+#info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 12;
+}
+
+#info-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(480px, calc(100% - 32px));
+  max-height: 80vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.info-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.info-modal-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+#info-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+#info-close:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.info-modal-body {
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+}
+
+.info-modal-body p {
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.info-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.info-tagline {
+  font-size: 1rem !important;
+  color: var(--text) !important;
+  font-weight: 500;
+}
+
+.info-links {
+  margin-top: 18px !important;
+  font-size: 0.88rem !important;
+}
+
+.info-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.info-links a:hover {
+  text-decoration: underline;
+}
+
+.info-sep {
+  margin: 0 8px;
+  color: var(--text-muted);
 }
 
 /* ===== Settings Panel ===== */

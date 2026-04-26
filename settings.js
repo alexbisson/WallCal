@@ -629,6 +629,14 @@ const Settings = (() => {
     document.getElementById('save-btn').addEventListener('click', _handleSave);
     document.getElementById('blackout').addEventListener('click', open);
 
+    const infoModal   = document.getElementById('info-modal');
+    const infoOverlay = document.getElementById('info-overlay');
+    const openInfo  = () => { infoModal.classList.remove('hidden'); infoOverlay.classList.remove('hidden'); };
+    const closeInfo = () => { infoModal.classList.add('hidden');    infoOverlay.classList.add('hidden'); };
+    document.getElementById('info-btn').addEventListener('click', openInfo);
+    document.getElementById('info-close').addEventListener('click', closeInfo);
+    infoOverlay.addEventListener('click', closeInfo);
+
     _initReminderWindowControls();
     _initFontSizeControls();
     _initThemeControls();
@@ -639,7 +647,10 @@ const Settings = (() => {
     _initStockControls();
     _handleAuthRedirectResult();
 
-    if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('settings-btn'));
+    if (typeof twemoji !== 'undefined') {
+      twemoji.parse(document.getElementById('settings-btn'));
+      twemoji.parse(document.getElementById('info-btn'));
+    }
 
     Calendar.initVersion();
 
