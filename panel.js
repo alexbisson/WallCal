@@ -346,7 +346,12 @@ const Panel = (() => {
   async function refreshStocks() {
     const section = document.getElementById('panel-stocks');
     const symbols = JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol);
-    if (!symbols.length) { section.classList.add('hidden'); return; }
+    if (!symbols.length) {
+      section.classList.add('hidden');
+      section.innerHTML = '';
+      delete section.dataset.stockSymbols;
+      return;
+    }
 
     _renderStocks(symbols);
   }
@@ -391,15 +396,25 @@ const Panel = (() => {
     if (section.dataset.stockSymbols === renderKey && !section.classList.contains('hidden')) return;
     section.dataset.stockSymbols = renderKey;
 
-    section.innerHTML = '<h2 class="panel-section-title">Stocks</h2>';
+    section.innerHTML = '';
     const list = document.createElement('div');
     list.className = 'stock-list stock-tv-list';
     section.appendChild(list);
 
     for (const symbol of symbols) {
       const row = document.createElement('div');
-      row.className = 'stock-tv-row tradingview-widget-container';
-      _appendTradingViewWidget(row, symbol);
+      row.className = 'stock-tv-row';
+
+      const label = document.createElement('span');
+      label.className = 'stock-tv-label';
+      label.textContent = symbol.replace(/\.TO$/i, '');
+      row.appendChild(label);
+
+      const quote = document.createElement('div');
+      quote.className = 'stock-tv-price-crop tradingview-widget-container';
+      row.appendChild(quote);
+
+      _appendTradingViewWidget(quote, symbol);
       list.appendChild(row);
     }
 

@@ -14,6 +14,8 @@ const Settings = (() => {
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
+  const STOCK_FONT_RATIO = 0.86;
+  const STOCK_WIDGET_SCALE = 0.50;
   let isOpen = false;
 
   // ── Panel open / close ────────────────────────────────────────────────────
@@ -413,6 +415,8 @@ const Settings = (() => {
     function apply() {
       document.getElementById('calendar-grid').style.fontSize = size + 'px';
       document.getElementById('panel-tasks').style.fontSize = size + 'px';
+      document.getElementById('panel-stocks').style.fontSize = (size * STOCK_FONT_RATIO).toFixed(1) + 'px';
+      document.getElementById('panel-stocks').style.setProperty('--stock-widget-scale', (size / FONT_DEFAULT * STOCK_WIDGET_SCALE).toFixed(3));
       document.getElementById('font-size-label').textContent = size + 'px';
       document.getElementById('font-decrease').disabled = size <= FONT_MIN;
       document.getElementById('font-increase').disabled = size >= FONT_MAX;

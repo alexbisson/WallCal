@@ -939,19 +939,48 @@ img.emoji {
   gap: 10px;
 }
 
+#panel-stocks {
+  padding: 6px 8px 6px 18px;
+  overflow: hidden !important;
+  font-size: 12px;
+  --stock-widget-scale: 0.50;
+}
+
 .stock-tv-list {
-  gap: 5px;
+  gap: 0.14em;
 }
 
 .stock-tv-row {
-  height: 42px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  height: 1.8em !important;
+  overflow: hidden !important;
 }
 
-.stock-tv-row iframe {
+.stock-tv-label {
+  width: 4.1em;
+  flex: 0 0 4.1em;
+  overflow: hidden;
+  font-size: 1.02em;
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stock-tv-price-crop {
+  flex: 1;
+  height: 1.8em !important;
+  overflow: hidden !important;
+}
+
+.stock-tv-price-crop iframe {
   display: block !important;
-  width: 125% !important;
-  transform: scale(0.8);
+  width: 460px !important;
+  height: 126px !important;
+  margin-top: -23px;
+  margin-left: -3px;
+  transform: scale(var(--stock-widget-scale));
   transform-origin: top left;
 }
 
