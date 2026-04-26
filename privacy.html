@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WallCal — Privacy Policy</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem 4rem;
+      line-height: 1.6;
+      color: #222;
+      background: #fff;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+    a { color: #1a73e8; }
+    ul { padding-left: 1.4rem; }
+    code { background: #f4f4f4; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.92em; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; color: #e8e8e8; }
+      .meta { color: #999; }
+      a { color: #8ab4f8; }
+      code { background: #2a2a2a; }
+    }
+  </style>
+</head>
+<body>
+  <h1>WallCal — Privacy Policy</h1>
+  <p class="meta">Last updated: April 26, 2026</p>
+
+  <p>WallCal is a personal wall-calendar display that shows your Google Calendar events and Google Tasks reminders on a screen. This policy explains what data the application accesses, how it is used, and where it is stored.</p>
+
+  <h2>1. Who operates this application</h2>
+  <p>WallCal is operated by Alex Bisson as a personal, non-commercial project. Contact: <a href="mailto:alex.bisson@gmail.com">alex.bisson@gmail.com</a>.</p>
+
+  <h2>2. Information the application accesses</h2>
+  <p>When you connect your Google account through the in-app settings, WallCal requests the following read-only OAuth scopes:</p>
+  <ul>
+    <li><code>https://www.googleapis.com/auth/calendar.readonly</code> — to read your calendar list and events so they can be displayed in the calendar grid.</li>
+    <li><code>https://www.googleapis.com/auth/tasks.readonly</code> — to read your Google Tasks lists and tasks so reminders can optionally be displayed in the calendar grid and side panel.</li>
+  </ul>
+  <p>WallCal never requests or uses write access to your Google account. It cannot create, modify, or delete any calendar event, task, or other item on your behalf.</p>
+
+  <h2>3. How information is used</h2>
+  <p>Information retrieved from Google APIs is used solely to render the calendar and reminders interface in your browser. Specifically:</p>
+  <ul>
+    <li>Calendar list and metadata are used to populate calendar selection and color settings.</li>
+    <li>Calendar events within the visible time window are rendered as event tiles in the monthly grid.</li>
+    <li>Task lists and tasks with due dates are optionally rendered as all-day events in the grid and listed in the side panel.</li>
+  </ul>
+  <p>Your Google data is not used for advertising, analytics, profiling, training machine-learning models, or any purpose other than displaying the calendar interface to you.</p>
+
+  <h2>4. Where data is stored</h2>
+  <p>WallCal has no backend server. All data processing happens entirely within your web browser. The following items are stored locally in your browser's <code>localStorage</code> on the device you use:</p>
+  <ul>
+    <li>Your OAuth Client ID and (optional) Client Secret — required to communicate with Google's authorization servers.</li>
+    <li>Your OAuth access token, its expiration timestamp, and your refresh token — required to make authenticated API requests on your behalf.</li>
+    <li>Your interface preferences (theme, font size, hidden calendars, weather city, reminder window, night blackout schedule).</li>
+  </ul>
+  <p>Your calendar events and tasks themselves are fetched from Google APIs each time the calendar refreshes and are held only in memory for rendering. They are not written to <code>localStorage</code> or any other persistent storage.</p>
+
+  <h2>5. Data sharing</h2>
+  <p>WallCal does not transmit your Google data to any third party. The only network destinations contacted by the application are:</p>
+  <ul>
+    <li><strong>Google APIs</strong> (<code>oauth2.googleapis.com</code>, <code>www.googleapis.com</code>) — to authenticate you and fetch your calendar and tasks data.</li>
+    <li><strong>Open-Meteo</strong> (<code>api.open-meteo.com</code>) — to fetch weather forecasts for the city you optionally select. No identifying information is sent; only the latitude and longitude of the chosen city.</li>
+    <li><strong>jsDelivr CDN</strong> (<code>cdn.jsdelivr.net</code>) — to load the Twemoji emoji rendering library.</li>
+    <li><strong>Vercel</strong> — the hosting provider that serves the static application files. Vercel may log standard HTTP request metadata (IP address, user agent, timestamp) according to its own privacy policy.</li>
+  </ul>
+  <p>No analytics, tracking pixels, advertising networks, or third-party data brokers are integrated into WallCal.</p>
+
+  <h2>6. Google API Services User Data Policy</h2>
+  <p>WallCal's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the <a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use" target="_blank" rel="noopener">Limited Use requirements</a>.</p>
+
+  <h2>7. Security</h2>
+  <p>All communication with Google APIs uses HTTPS. OAuth authorization uses the Authorization Code flow with PKCE (Proof Key for Code Exchange) to protect the authorization process. Tokens are stored in your browser's <code>localStorage</code> and are accessible only to the WallCal origin (<code>https://wallcal.alexbisson.com</code>). Because storage is local to your browser, anyone with physical access to your device may be able to view the stored tokens; treat the device hosting WallCal accordingly.</p>
+
+  <h2>8. Your rights and how to revoke access</h2>
+  <p>You may revoke WallCal's access to your Google account at any time by visiting <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a> and removing WallCal from the list of connected applications. You may also clear all locally stored data by clearing site data for <code>wallcal.alexbisson.com</code> in your browser settings.</p>
+
+  <h2>9. Data retention</h2>
+  <p>Tokens and preferences remain in your browser's <code>localStorage</code> until you clear them or until the browser evicts them. WallCal itself does not retain any of your data on a server because no server-side storage exists.</p>
+
+  <h2>10. Children's privacy</h2>
+  <p>WallCal is not directed at children under 13 and does not knowingly collect any information from them.</p>
+
+  <h2>11. Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be published at this URL and the "Last updated" date at the top will be revised.</p>
+
+  <h2>12. Contact</h2>
+  <p>For questions about this policy or about WallCal, contact <a href="mailto:alex.bisson@gmail.com">alex.bisson@gmail.com</a>.</p>
+</body>
+</html>
