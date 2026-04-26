@@ -1110,8 +1110,10 @@ img.emoji {
   width: 4.1em;
   flex: 0 0 4.1em;
   overflow: hidden;
-  font-size: 1.02em;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;

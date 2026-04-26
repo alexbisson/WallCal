@@ -346,7 +346,7 @@ const Panel = (() => {
   async function refreshStocks() {
     const section = document.getElementById('panel-stocks');
     const symbols = JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol);
-    if (!symbols.length) {
+    if (!symbols.length || !_shouldShowStocksNow()) {
       section.classList.add('hidden');
       section.innerHTML = '';
       delete section.dataset.stockSymbols;
@@ -354,6 +354,14 @@ const Panel = (() => {
     }
 
     _renderStocks(symbols);
+  }
+
+  function _shouldShowStocksNow(now = new Date()) {
+    const day = now.getDay();
+    if (day === 0 || day === 6) return false;
+
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    return minutes >= 9 * 60 + 30;
   }
 
   function _tradingViewSymbol(symbol) {
