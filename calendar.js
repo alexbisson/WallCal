@@ -6,7 +6,7 @@
 const Calendar = (() => {
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTH_EMOJI = ['❄️', '❤️', '🌱', '🌸', '🌼', '☀️', '🏖️', '🌻', '🍂', '🎃', '🍁', '🎄'];
-  const MAX_VISIBLE = 3; // event chips shown per cell before overflow indicator
+  const MAX_VISIBLE = 4; // event chips shown per cell before overflow indicator
 
   // ── Date helpers ──────────────────────────────────────────────────────────
 
