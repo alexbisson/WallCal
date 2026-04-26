@@ -7,8 +7,6 @@ const Panel = (() => {
   const LOCATION_KEY        = 'wallcal_location';
   const TASKS_KEY           = 'wallcal_tasks_list';
   const STOCKS_KEY          = 'wallcal_stocks';
-  const STOCKS_HISTORY_KEY  = 'wallcal_stocks_history';
-  const STOCKS_HISTORY_MAX  = 60; // ~5 hours at 5-min refresh cadence
   const QUOTE_TTL           = 60 * 60 * 1000; // refresh quote every hour
 
   // ── Clock ──────────────────────────────────────────────────────────────────
@@ -345,97 +343,66 @@ const Panel = (() => {
 
   // ── Stocks ─────────────────────────────────────────────────────────────────
 
-  function _sparkline(closes, positive) {
-    const W = 80, H = 28;
-    if (closes.length < 2) return '';
-    const min = Math.min(...closes);
-    const max = Math.max(...closes);
-    const range = max - min || 1;
-    const pts = closes.map((v, i) => {
-      const x = (i / (closes.length - 1)) * W;
-      const y = H - 2 - ((v - min) / range) * (H - 4);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
-    const color = positive ? '#34d399' : '#f87171';
-    const id = `sg-${Math.random().toString(36).slice(2, 7)}`;
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" class="stock-sparkline">
-      <defs>
-        <linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
-          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d="M${pts.join(' L')} L${W},${H} L0,${H} Z" fill="url(#${id})"/>
-      <polyline points="${pts.join(' ')}" stroke="${color}" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-    </svg>`;
-  }
-
-  function _loadStockHistory() {
-    try { return JSON.parse(localStorage.getItem(STOCKS_HISTORY_KEY) || '{}'); }
-    catch (_) { return {}; }
-  }
-
-  function _appendStockHistory(quotes) {
-    const history = _loadStockHistory();
-    for (const q of quotes) {
-      const arr = history[q.symbol] || [];
-      arr.push(q.price);
-      if (arr.length > STOCKS_HISTORY_MAX) arr.splice(0, arr.length - STOCKS_HISTORY_MAX);
-      history[q.symbol] = arr;
-    }
-    // Drop history entries for symbols no longer tracked.
-    const tracked = new Set(JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol));
-    for (const k of Object.keys(history)) if (!tracked.has(k)) delete history[k];
-    localStorage.setItem(STOCKS_HISTORY_KEY, JSON.stringify(history));
-  }
-
   async function refreshStocks() {
-    const dow = new Date().getDay();
     const section = document.getElementById('panel-stocks');
-    if (dow === 0 || dow === 6) { section.classList.add('hidden'); return; }
-
     const symbols = JSON.parse(localStorage.getItem(STOCKS_KEY) || '[]').map(s => s.symbol);
     if (!symbols.length) { section.classList.add('hidden'); return; }
 
-    const delays = [5000, 15000, 45000];
-    for (let attempt = 0; attempt <= delays.length; attempt++) {
-      try {
-        const quotes = await Api.fetchStockQuotes(symbols);
-        _appendStockHistory(quotes);
-        _renderStocks(quotes);
-        return;
-      } catch (e) {
-        // Missing API key is permanent — don't retry, just hide the widget.
-        if (e && e.code === 'no_api_key') { section.classList.add('hidden'); return; }
-        if (attempt < delays.length) {
-          await new Promise(r => setTimeout(r, delays[attempt]));
-        }
-      }
-    }
+    _renderStocks(symbols);
   }
 
-  function _renderStocks(quotes) {
+  function _tradingViewSymbol(symbol) {
+    const s = String(symbol || '').trim().toUpperCase();
+    if (s.includes(':')) return s;
+
+    const m = s.match(/^(.+)\.(TO|V|CN)$/);
+    if (m && m[2] === 'TO') return `TSX:${m[1]}`;
+    if (m && m[2] === 'V') return `TSXV:${m[1]}`;
+    if (m && m[2] === 'CN') return `CSE:${m[1]}`;
+
+    // Common WallCal shorthand. For NYSE/AMEX names, enter EXCHANGE:SYMBOL.
+    return `NASDAQ:${s}`;
+  }
+
+  function _appendTradingViewWidget(container, symbol) {
+    const widget = document.createElement('div');
+    widget.className = 'tradingview-widget-container__widget';
+    container.appendChild(widget);
+
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
+    script.async = true;
+    script.text = JSON.stringify({
+      symbol: _tradingViewSymbol(symbol),
+      width: '100%',
+      isTransparent: true,
+      colorTheme: 'dark',
+      locale: 'en',
+    });
+    container.appendChild(script);
+  }
+
+  function _renderStocks(symbols) {
     const section = document.getElementById('panel-stocks');
-    if (!quotes.length) { section.classList.add('hidden'); return; }
+    if (!symbols.length) { section.classList.add('hidden'); return; }
 
-    const history = _loadStockHistory();
-    const rows = quotes.map(q => {
-      const pos = q.changePercent >= 0;
-      const sign = pos ? '+' : '';
-      const pct = `${sign}${q.changePercent.toFixed(2)}%`;
-      const price = q.price.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const chart = _sparkline(history[q.symbol] || [], pos);
-      return `<div class="stock-row">
-        <span class="stock-symbol">${q.symbol}</span>
-        <div class="stock-chart">${chart}</div>
-        <div class="stock-price-col">
-          <span class="stock-price">${price}</span>
-          <span class="stock-change ${pos ? 'stock-pos' : 'stock-neg'}">${pct}</span>
-        </div>
-      </div>`;
-    }).join('');
+    const renderKey = symbols.join('|');
+    if (section.dataset.stockSymbols === renderKey && !section.classList.contains('hidden')) return;
+    section.dataset.stockSymbols = renderKey;
 
-    section.innerHTML = `<h2 class="panel-section-title">Stocks</h2><div class="stock-list">${rows}</div>`;
+    section.innerHTML = '<h2 class="panel-section-title">Stocks</h2>';
+    const list = document.createElement('div');
+    list.className = 'stock-list stock-tv-list';
+    section.appendChild(list);
+
+    for (const symbol of symbols) {
+      const row = document.createElement('div');
+      row.className = 'stock-tv-row tradingview-widget-container';
+      _appendTradingViewWidget(row, symbol);
+      list.appendChild(row);
+    }
+
     section.classList.remove('hidden');
   }
 

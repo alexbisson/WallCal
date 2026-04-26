@@ -3,7 +3,7 @@
 // Auth module — OAuth 2.0 Authorization Code + PKCE with refresh tokens.
 //
 // How it works:
-//   connect()  — opens a popup for the one-time consent screen, exchanges the
+//   connect()  — redirects through the one-time consent screen, exchanges the
 //                auth code for an access token + refresh token, stores both.
 //   getToken() — returns the stored access token if still valid; otherwise calls
 //                the Google token endpoint directly (plain fetch, no popup, no
@@ -13,6 +13,7 @@
 // hidden iframe / popup on every hourly renewal and broke without user interaction.
 //
 // Exposes: getToken(), connect(clientId, clientSecret), handleRedirect(),
+//          getRedirectResult(), getRedirectUri(), isFileOrigin(),
 //          getClientId(), setClientId(), getClientSecret(), setClientSecret(),
 //          clearToken()
 const Auth = (() => {
@@ -22,9 +23,11 @@ const Auth = (() => {
   const TOKEN_KEY         = 'wallcal_access_token';
   const TOKEN_EXPIRY_KEY  = 'wallcal_token_expiry';
   const REFRESH_TOKEN_KEY = 'wallcal_refresh_token';
+  const OAUTH_PENDING_KEY = 'wallcal_oauth_pending';
   const TOKEN_ENDPOINT    = 'https://oauth2.googleapis.com/token';
 
   let _pendingGetToken = null;
+  let _redirectResult = Promise.resolve(null);
 
   // ── PKCE helpers ──────────────────────────────────────────────────────────
 
@@ -67,6 +70,49 @@ const Auth = (() => {
   function clearToken() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  }
+
+  function _redirectUri() {
+    return window.location.origin + window.location.pathname.replace(/\/+$/, '');
+  }
+
+  function isFileOrigin() {
+    return window.location.protocol === 'file:';
+  }
+
+  function getRedirectUri() {
+    return _redirectUri();
+  }
+
+  function _generateState() {
+    const buf = new Uint8Array(16);
+    crypto.getRandomValues(buf);
+    return btoa(String.fromCharCode(...buf))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  async function _exchangeCode({ code, redirectUri, clientId, clientSecret, verifier }) {
+    const tokenParams = new URLSearchParams({
+      grant_type:    'authorization_code',
+      code,
+      redirect_uri:  redirectUri,
+      client_id:     clientId,
+      code_verifier: verifier,
+    });
+    if (clientSecret) tokenParams.set('client_secret', clientSecret);
+
+    const res = await fetch(TOKEN_ENDPOINT, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    tokenParams.toString(),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error_description || `Token exchange failed (${res.status})`);
+    }
+
+    return _saveTokens(await res.json());
   }
 
   // ── Silent refresh ────────────────────────────────────────────────────────
@@ -118,9 +164,13 @@ const Auth = (() => {
     return _pendingGetToken;
   }
 
-  // One-time setup: opens a popup OAuth consent screen, exchanges the resulting
-  // auth code for an access token + long-lived refresh token, and stores both.
+  // One-time setup: redirects through the OAuth consent screen. Redirecting the
+  // current page works in embedded browsers that block popup windows.
   async function connect(clientId, clientSecret) {
+    if (isFileOrigin()) {
+      throw new Error('Google blocks file:// OAuth redirects. Open WallCal from http://localhost and register that localhost redirect URI.');
+    }
+
     setClientId(clientId);
     if (clientSecret) {
       setClientSecret(clientSecret);
@@ -130,7 +180,16 @@ const Auth = (() => {
 
     const verifier   = _generateVerifier();
     const challenge  = await _generateChallenge(verifier);
-    const redirectUri = window.location.origin + window.location.pathname.replace(/\/+$/, '');
+    const redirectUri = _redirectUri();
+    const state       = _generateState();
+
+    sessionStorage.setItem(OAUTH_PENDING_KEY, JSON.stringify({
+      verifier,
+      state,
+      redirectUri,
+      clientId,
+      clientSecret: clientSecret || '',
+    }));
 
     const authParams = new URLSearchParams({
       response_type:         'code',
@@ -139,94 +198,59 @@ const Auth = (() => {
       scope:                 SCOPE,
       access_type:           'offline',
       prompt:                'consent',
+      state,
       code_challenge:        challenge,
       code_challenge_method: 'S256',
     });
 
-    const popup = window.open(
-      'https://accounts.google.com/o/oauth2/v2/auth?' + authParams,
-      'wallcal_oauth',
-      'width=520,height=640,menubar=no,toolbar=no,location=no,status=no',
-    );
-    if (!popup) {
-      const err = new Error('Popup blocked — please allow popups for this page and try again.');
-      err.code = 'popup_blocked';
-      throw err;
-    }
-
-    // Wait for the popup to post back the auth code via handleRedirect().
-    const code = await new Promise((resolve, reject) => {
-      const pollTimer = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(pollTimer);
-          window.removeEventListener('message', handler);
-          reject(new Error('Authorization was cancelled.'));
-        }
-      }, 500);
-
-      function handler(event) {
-        if (event.origin !== window.location.origin) return;
-        if (!event.data || event.data.type !== 'wallcal_oauth_code') return;
-        clearInterval(pollTimer);
-        window.removeEventListener('message', handler);
-        if (event.data.error) reject(new Error(event.data.error));
-        else resolve(event.data.code);
-      }
-      window.addEventListener('message', handler);
-    });
-
-    // Exchange the auth code for access + refresh tokens.
-    const tokenParams = new URLSearchParams({
-      grant_type:    'authorization_code',
-      code,
-      redirect_uri:  redirectUri,
-      client_id:     clientId,
-      code_verifier: verifier,
-    });
-    if (clientSecret) tokenParams.set('client_secret', clientSecret);
-
-    const res = await fetch(TOKEN_ENDPOINT, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    tokenParams.toString(),
-    });
-
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error_description || `Token exchange failed (${res.status})`);
-    }
-
-    return _saveTokens(await res.json());
+    window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + authParams);
+    return new Promise(() => {});
   }
 
   // Call this as early as possible on page load. If this page is the OAuth
-  // redirect target inside the popup, it posts the auth code back to the opener
-  // and closes itself — the rest of the app never initialises in that case.
-  // Returns true if handled (window will close), false otherwise.
+  // redirect target, it exchanges the auth code and exposes the result through
+  // getRedirectResult().
+  // Returns true if OAuth params were found, false otherwise.
   function handleRedirect() {
     const params = new URLSearchParams(window.location.search);
     const code   = params.get('code');
     const error  = params.get('error');
+    const state  = params.get('state');
     if (!code && !error) return false;
 
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage(
-        { type: 'wallcal_oauth_code', code: code || null, error: error || null },
-        window.location.origin,
-      );
-      window.close();
-      return true;
-    }
-
-    // Not in a popup (e.g. popup was blocked and user was redirected in the main
-    // window). Remove the OAuth params and let the app load normally; the user
-    // will need to click Connect again.
     window.history.replaceState({}, '', window.location.pathname);
-    return false;
+
+    _redirectResult = (async () => {
+      const rawPending = sessionStorage.getItem(OAUTH_PENDING_KEY);
+      sessionStorage.removeItem(OAUTH_PENDING_KEY);
+
+      if (error) throw new Error(error);
+      if (!rawPending) throw new Error('Missing saved OAuth state. Please connect again.');
+
+      const pending = JSON.parse(rawPending);
+      if (!state || state !== pending.state) {
+        throw new Error('OAuth state mismatch. Please connect again.');
+      }
+
+      await _exchangeCode({
+        code,
+        redirectUri: pending.redirectUri,
+        clientId: pending.clientId,
+        clientSecret: pending.clientSecret,
+        verifier: pending.verifier,
+      });
+      return { connected: true };
+    })();
+
+    return true;
+  }
+
+  function getRedirectResult() {
+    return _redirectResult;
   }
 
   return {
-    getToken, connect, handleRedirect,
+    getToken, connect, handleRedirect, getRedirectResult, getRedirectUri, isFileOrigin,
     getClientId, setClientId, getClientSecret, setClientSecret, clearToken,
   };
 })();

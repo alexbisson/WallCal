@@ -117,20 +117,10 @@
 
     <section class="settings-section">
       <h3>Stocks</h3>
-      <div class="field-group">
-        <label for="fmp-key-input">Financial Modeling Prep API key</label>
-        <input
-          type="password"
-          id="fmp-key-input"
-          placeholder="Paste your FMP API key"
-          autocomplete="off"
-          spellcheck="false"
-        >
-        <p class="settings-hint">Free key from <a href="https://financialmodelingprep.com/register" target="_blank" rel="noopener">financialmodelingprep.com</a> — supports US and TSX (XEQT.TO).</p>
-      </div>
+      <p class="settings-hint">Powered by free TradingView widgets. Use .TO for TSX symbols, or an explicit TradingView symbol like TSX:SHOP, NASDAQ:AAPL, or NYSE:RY.</p>
       <ul id="stock-settings-list" class="stock-settings-list"></ul>
       <div class="stock-add-row">
-        <input type="text" id="stock-search" placeholder="Symbol, e.g. AAPL or SHOP.TO" autocomplete="off" spellcheck="false">
+        <input type="text" id="stock-search" placeholder="Symbol, e.g. AAPL, SHOP.TO, TSX:RY" autocomplete="off" spellcheck="false">
         <button id="stock-add-btn" aria-label="Add stock">+</button>
       </div>
       <p id="stock-add-message" class="settings-hint stock-add-message"></p>

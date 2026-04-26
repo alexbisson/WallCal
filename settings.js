@@ -11,7 +11,6 @@ const Settings = (() => {
   const TASKS_LIST_KEY       = 'wallcal_tasks_list';
   const REMINDER_WINDOW_KEY  = 'wallcal_reminder_window';
   const STOCKS_KEY           = 'wallcal_stocks';
-  const FMP_KEY              = 'wallcal_fmp_key';
   const FONT_DEFAULT   = 14;
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
@@ -33,8 +32,10 @@ const Settings = (() => {
     if (secret) document.getElementById('client-secret-input').value = secret;
 
     // Show the redirect URI the user needs to register in Google Cloud Console.
-    document.getElementById('redirect-uri-display').textContent =
-      window.location.origin + window.location.pathname.replace(/\/+$/, '');
+    const redirectEl = document.getElementById('redirect-uri-display');
+    redirectEl.textContent = Auth.isFileOrigin()
+      ? 'Open WallCal from http://localhost first; Google blocks file:// redirect URIs.'
+      : Auth.getRedirectUri();
 
     // Load calendar and task lists if we already have a token.
     loadCalendarList();
@@ -69,20 +70,10 @@ const Settings = (() => {
     _showMessage('');
 
     try {
+      _showMessage('Redirecting to Google…', 'success');
       await Auth.connect(clientId, clientSecret);
-      _showMessage('Connected successfully.', 'success');
-      btn.textContent = 'Reconnect Google';
-      btn.disabled = false;
-
-      // Refresh the main view and populate the calendar and task lists.
-      Calendar.refresh();
-      loadCalendarList();
-      loadTaskListOptions();
     } catch (err) {
-      const msg = err.code === 'popup_blocked'
-        ? 'Popup blocked — please allow popups for this page and try again.'
-        : `Connection failed: ${err.message}`;
-      _showMessage(msg, 'error');
+      _showMessage(`Connection failed: ${err.message}`, 'error');
       btn.textContent = 'Connect Google';
       btn.disabled = false;
     }
@@ -396,6 +387,7 @@ const Settings = (() => {
     _saveBlackoutSettings({ enabled, from, to });
     _showSaveMessage('Settings saved.', 'success');
     _applyBlackout();
+    close();
   }
 
   // ── Reminder window ───────────────────────────────────────────────────────
@@ -575,15 +567,6 @@ const Settings = (() => {
     const input   = document.getElementById('stock-search');
     const addBtn  = document.getElementById('stock-add-btn');
     const message = document.getElementById('stock-add-message');
-    const keyEl   = document.getElementById('fmp-key-input');
-
-    keyEl.value = localStorage.getItem(FMP_KEY) || '';
-    keyEl.addEventListener('change', () => {
-      const v = keyEl.value.trim();
-      if (v) localStorage.setItem(FMP_KEY, v);
-      else   localStorage.removeItem(FMP_KEY);
-      Panel.refreshStocks();
-    });
 
     function _renderList() {
       const stocks = getStockSymbols();
@@ -616,27 +599,12 @@ const Settings = (() => {
       }
 
       addBtn.disabled = true;
-      message.textContent = 'Validating…';
+      _saveStocks([...getStockSymbols(), { symbol: sym }]);
+      _renderList();
+      input.value = '';
+      message.textContent = '';
       message.className = 'settings-hint stock-add-message';
-
-      try {
-        const quotes = await Api.fetchStockQuotes([sym]);
-        if (!quotes.length) throw new Error('not found');
-        _saveStocks([...getStockSymbols(), { symbol: quotes[0].symbol }]);
-        _renderList();
-        input.value = '';
-        message.textContent = '';
-      } catch (e) {
-        let text;
-        if (e && e.code === 'no_api_key')               text = 'Add a Financial Modeling Prep API key above before adding stocks.';
-        else if (e instanceof TypeError)                text = 'Could not reach the stock data service. Check your connection.';
-        else if (e && e.code === 'bad_key')             text = 'FMP rejected the API key. Check it for typos.';
-        else                                            text = `"${sym}" was not found. Check the ticker (e.g. AAPL, XEQT.TO for TSX).`;
-        message.textContent = text;
-        message.className = 'settings-hint stock-add-message stock-add-error';
-      } finally {
-        addBtn.disabled = false;
-      }
+      addBtn.disabled = false;
     }
 
     addBtn.addEventListener('click', _handleAdd);
@@ -665,6 +633,7 @@ const Settings = (() => {
     _applyBlackout();
     _initWeatherControls();
     _initStockControls();
+    _handleAuthRedirectResult();
 
     if (typeof twemoji !== 'undefined') twemoji.parse(document.getElementById('settings-btn'));
 
@@ -681,6 +650,27 @@ const Settings = (() => {
     setInterval(Calendar.refresh, 10 * 60 * 1000);
     // Re-check theme and blackout every minute.
     setInterval(() => { _applyTheme(); _applyBlackout(); }, 60 * 1000);
+  }
+
+  async function _handleAuthRedirectResult() {
+    try {
+      const result = await Auth.getRedirectResult();
+      if (!result) return;
+
+      open();
+      _showMessage('Connected successfully.', 'success');
+      document.getElementById('connect-btn').textContent = 'Reconnect Google';
+
+      Calendar.refresh();
+      loadCalendarList();
+      loadTaskListOptions();
+    } catch (err) {
+      open();
+      _showMessage(`Connection failed: ${err.message}`, 'error');
+      document.getElementById('connect-btn').textContent = 'Connect Google';
+    } finally {
+      document.getElementById('connect-btn').disabled = false;
+    }
   }
 
   return { init, loadCalendarList, loadTaskListOptions, getReminderWindow, getStockSymbols };

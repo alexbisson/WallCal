@@ -939,6 +939,22 @@ img.emoji {
   gap: 10px;
 }
 
+.stock-tv-list {
+  gap: 5px;
+}
+
+.stock-tv-row {
+  height: 42px;
+  overflow: hidden;
+}
+
+.stock-tv-row iframe {
+  display: block !important;
+  width: 125% !important;
+  transform: scale(0.8);
+  transform-origin: top left;
+}
+
 .stock-row {
   display: flex;
   align-items: center;
