@@ -649,7 +649,6 @@ const Settings = (() => {
 
     if (typeof twemoji !== 'undefined') {
       twemoji.parse(document.getElementById('settings-btn'));
-      twemoji.parse(document.getElementById('info-btn'));
     }
 
     Calendar.initVersion();

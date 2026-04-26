@@ -54,7 +54,7 @@ html, body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  padding: 28px 18px 18px;
+  padding: 12px 18px 18px;
   background: url('bg-panel.jpg') center center / cover no-repeat;
   border-right: 1px solid var(--border);
   overflow: hidden;
@@ -355,6 +355,13 @@ img.emoji {
 #info-btn:hover {
   color: var(--text);
   background: var(--surface-2);
+}
+
+#info-btn {
+  font-family: Georgia, serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 700;
 }
 
 /* ===== Status Bar ===== */
