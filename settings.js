@@ -490,7 +490,24 @@ const Settings = (() => {
       return d;
     }
 
-    return { sunrise: calc(true), sunset: calc(false) };
+    let sunrise = calc(true);
+    let sunset  = calc(false);
+
+    // The USNO algorithm yields UT in [0, 24) placed on the local calendar date as if it were a
+    // UTC date.  Near midnight UTC the two events can land on the wrong side of the UTC date
+    // boundary, making sunrise appear *after* sunset:
+    //
+    //  • Western longitudes (lng < 0): sunset crosses UTC midnight into the next day → add 1 day.
+    //  • Eastern longitudes (lng ≥ 0): sunrise was actually the previous UTC day → subtract 1 day.
+    if (sunrise && sunset && sunrise > sunset) {
+      if (lng < 0) {
+        sunset  = new Date(sunset.getTime()  + 86_400_000);
+      } else {
+        sunrise = new Date(sunrise.getTime() - 86_400_000);
+      }
+    }
+
+    return { sunrise, sunset };
   }
 
   function _applyTheme() {
