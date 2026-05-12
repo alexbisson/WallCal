@@ -231,12 +231,20 @@ img.emoji {
   margin-bottom: 10px;
 }
 
+#panel-tasks {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 #panel-tasks-list {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 9px;
-  max-height: 340px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -258,7 +266,7 @@ img.emoji {
 }
 
 .task-name {
-  font-size: 0.85em;
+  font-size: 0.78em;
   line-height: 1.3;
 }
 
