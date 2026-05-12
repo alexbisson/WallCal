@@ -176,6 +176,14 @@ const Panel = (() => {
 
     document.getElementById('panel-tasks').classList.toggle('hidden', active.length === 0);
     if (typeof twemoji !== 'undefined') twemoji.parse(list);
+    _syncQuoteVisibility();
+  }
+
+  function _syncQuoteVisibility() {
+    const list  = document.getElementById('panel-tasks-list');
+    const quote = document.getElementById('panel-quote');
+    const overflowing = list.scrollHeight > list.clientHeight;
+    quote.classList.toggle('hidden', overflowing);
   }
 
   // ── Quote ──────────────────────────────────────────────────────────────────
@@ -439,6 +447,10 @@ const Panel = (() => {
     refreshTasks();
     refreshStocks();
     _refreshQuote();
+
+    // Re-evaluate quote visibility whenever the task list changes size (e.g. window resize).
+    new ResizeObserver(_syncQuoteVisibility)
+      .observe(document.getElementById('panel-tasks-list'));
 
     // Refresh weather every 30 min, tasks every 10 min, stocks every 5 min, quote every hour.
     setInterval(refreshWeather, 30 * 60 * 1000);
