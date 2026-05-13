@@ -242,31 +242,30 @@ img.emoji {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 7px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
 .task-item {
-  padding-left: 14px;
-  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .task-item::before {
   content: '';
-  position: absolute;
-  left: 0;
-  top: 5px;
-  width: 6px;
-  height: 6px;
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.55);
-  flex-shrink: 0;
+  margin-top: 0.38em;
 }
 
 .task-name {
-  font-size: 0.78em;
+  font-size: 0.73em;
   line-height: 1.3;
 }
 

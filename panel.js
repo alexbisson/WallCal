@@ -176,16 +176,20 @@ const Panel = (() => {
 
     document.getElementById('panel-tasks').classList.toggle('hidden', active.length === 0);
     if (typeof twemoji !== 'undefined') twemoji.parse(list);
-    // Defer until after the browser has performed layout so scrollHeight is accurate
-    // and so we don't react to our own DOM change in a ResizeObserver loop.
-    requestAnimationFrame(_syncQuoteVisibility);
+    _syncQuoteVisibility();
   }
 
   function _syncQuoteVisibility() {
     const list  = document.getElementById('panel-tasks-list');
     const quote = document.getElementById('panel-quote');
-    const overflowing = list.scrollHeight > list.clientHeight;
-    quote.classList.toggle('hidden', overflowing);
+    // Always restore the quote first so the overflow check sees the layout
+    // with the quote present (giving panel-tasks its true constrained height).
+    quote.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      if (list.scrollHeight > list.clientHeight) {
+        quote.classList.add('hidden');
+      }
+    });
   }
 
   // ── Quote ──────────────────────────────────────────────────────────────────
