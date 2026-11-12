@@ -165,7 +165,18 @@ const Calendar = (() => {
     const old = cell.querySelector('.overflow-indicator');
     if (old) old.remove();
 
-    const overflows = () => cell.scrollHeight > cell.clientHeight + 1;
+    // Compare the last visible element's bottom to the cell's border-box
+    // bottom: chips may use the cell's bottom padding, so scrollHeight (which
+    // includes that padding) would report a false overflow of a few pixels.
+    const overflows = () => {
+      const limit = cell.getBoundingClientRect().bottom + 0.5;
+      let bottom = 0;
+      for (const el of cell.children) {
+        if (el.style.display === 'none') continue;
+        bottom = Math.max(bottom, el.getBoundingClientRect().bottom);
+      }
+      return bottom > limit;
+    };
     if (!chips.length || !overflows()) return;
 
     const more = document.createElement('div');
@@ -185,11 +196,12 @@ const Calendar = (() => {
     document.querySelectorAll('#calendar-grid .day-cell').forEach(_fitCell);
   }
 
-  let _resizeTimer = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(_resizeTimer);
-    _resizeTimer = setTimeout(_fitAll, 150);
-  });
+  let _fitTimer = null;
+  function _scheduleFit() {
+    clearTimeout(_fitTimer);
+    _fitTimer = setTimeout(_fitAll, 150);
+  }
+  window.addEventListener('resize', _scheduleFit);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -229,6 +241,9 @@ const Calendar = (() => {
     // Fonts / emoji images can change chip sizes after first layout.
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(_fitAll);
     window.addEventListener('load', _fitAll, { once: true });
+    grid.querySelectorAll('img').forEach(img => {
+      if (!img.complete) img.addEventListener('load', _scheduleFit, { once: true });
+    });
   }
 
   function _updateMonthLabel(start) {
