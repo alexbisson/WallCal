@@ -6,7 +6,6 @@
 const Calendar = (() => {
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTH_EMOJI = ['❄️', '❤️', '🌱', '🌸', '🌼', '☀️', '🏖️', '🌻', '🍂', '🎃', '🍁', '🎄'];
-  const MAX_VISIBLE = 4; // event chips shown per cell before overflow indicator
 
   // ── Date helpers ──────────────────────────────────────────────────────────
 
@@ -137,18 +136,12 @@ const Calendar = (() => {
     const regularEvents = dayEvents.filter(e => !e._isEvening);
     const eveningEvents = dayEvents.filter(e => e._isEvening);
 
-    const visibleRegular = regularEvents.slice(0, MAX_VISIBLE);
-    const overflowCount = regularEvents.length - MAX_VISIBLE;
-
-    for (const event of visibleRegular) {
-      cell.appendChild(_buildEventChip(event));
-    }
-
-    if (overflowCount > 0) {
-      const more = document.createElement('div');
-      more.className = 'overflow-indicator';
-      more.textContent = `+${overflowCount} more`;
-      cell.appendChild(more);
+    // All chips are rendered; _fitCell() hides the trailing regular ones only
+    // if the cell actually overflows, replacing them with a "+N more" line.
+    for (const event of regularEvents) {
+      const chip = _buildEventChip(event);
+      chip.classList.add('regular');
+      cell.appendChild(chip);
     }
 
     if (eveningEvents.length > 0) {
@@ -163,6 +156,40 @@ const Calendar = (() => {
 
     return cell;
   }
+
+  // Hide trailing daytime chips (and show "+N more") only when the cell's
+  // content doesn't fit its height. Evening chips stay visible.
+  function _fitCell(cell) {
+    const chips = [...cell.querySelectorAll('.event-chip.regular')];
+    for (const c of chips) c.style.display = '';
+    const old = cell.querySelector('.overflow-indicator');
+    if (old) old.remove();
+
+    const overflows = () => cell.scrollHeight > cell.clientHeight + 1;
+    if (!chips.length || !overflows()) return;
+
+    const more = document.createElement('div');
+    more.className = 'overflow-indicator';
+    chips[chips.length - 1].after(more);
+
+    let hidden = 0;
+    for (let i = chips.length - 1; i >= 0; i--) {
+      chips[i].style.display = 'none';
+      hidden++;
+      more.textContent = `+${hidden} more`;
+      if (!overflows()) break;
+    }
+  }
+
+  function _fitAll() {
+    document.querySelectorAll('#calendar-grid .day-cell').forEach(_fitCell);
+  }
+
+  let _resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(_fitAll, 150);
+  });
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -197,6 +224,11 @@ const Calendar = (() => {
       twemoji.parse(document.getElementById('month-label'));
       twemoji.parse(grid);
     }
+
+    _fitAll();
+    // Fonts / emoji images can change chip sizes after first layout.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(_fitAll);
+    window.addEventListener('load', _fitAll, { once: true });
   }
 
   function _updateMonthLabel(start) {
