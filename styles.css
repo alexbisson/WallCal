@@ -1106,46 +1106,41 @@ img.emoji {
   padding: 6px 8px 6px 18px;
   overflow: hidden !important;
   font-size: 12px;
-  --stock-widget-scale: 0.50;
+  --stock-widget-scale: 0.80;
 }
 
 .stock-tv-list {
-  gap: 0.14em;
+  gap: 0.3em;
 }
 
+/* TradingView single-quote widget. Its layout is one ~70px-tall row:
+   [logo] SYMBOL / name ........ PRICE CUR / change %.
+   We scale it down, crop off the logo (56px) and the TradingView corner
+   badge above the text (19px), and let the right edge align with the card. */
 .stock-tv-row {
   display: flex;
   align-items: center;
-  height: 1.8em !important;
-  overflow: hidden !important;
-}
-
-.stock-tv-label {
-  width: 4.1em;
-  flex: 0 0 4.1em;
-  overflow: hidden;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .stock-tv-price-crop {
+  position: relative;
   flex: 1;
-  height: 1.8em !important;
+  min-width: 0;
+  height: calc(40px * var(--stock-widget-scale)) !important;
   overflow: hidden !important;
 }
 
 .stock-tv-price-crop iframe {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block !important;
-  width: 460px !important;
-  height: 126px !important;
-  margin-top: -23px;
-  margin-left: -3px;
-  transform: scale(var(--stock-widget-scale));
+  width: calc(100% / var(--stock-widget-scale) + 56px) !important;
+  height: 70px !important;
+  margin: 0;
+  transform: translate(calc(-56px * var(--stock-widget-scale)),
+                       calc(-19px * var(--stock-widget-scale)))
+             scale(var(--stock-widget-scale));
   transform-origin: top left;
 }
 

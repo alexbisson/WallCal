@@ -15,7 +15,7 @@ const Settings = (() => {
   const FONT_MIN       = 10;
   const FONT_MAX       = 22;
   const STOCK_FONT_RATIO = 0.86;
-  const STOCK_WIDGET_SCALE = 0.50;
+  const STOCK_WIDGET_SCALE = 0.80;
   let isOpen = false;
 
   // ── Panel open / close ────────────────────────────────────────────────────
