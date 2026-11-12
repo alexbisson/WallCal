@@ -429,11 +429,7 @@ const Panel = (() => {
       const row = document.createElement('div');
       row.className = 'stock-tv-row';
 
-      const label = document.createElement('span');
-      label.className = 'stock-tv-label';
-      label.textContent = symbol.replace(/\.TO$/i, '');
-      row.appendChild(label);
-
+      // The widget shows its own symbol + name, so no separate label.
       const quote = document.createElement('div');
       quote.className = 'stock-tv-price-crop tradingview-widget-container';
       row.appendChild(quote);
