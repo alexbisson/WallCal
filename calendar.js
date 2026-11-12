@@ -280,6 +280,25 @@ const Calendar = (() => {
   function _initVersion() {
     if (typeof APP_VERSION !== 'undefined') {
       document.getElementById('status-version').textContent = `v${APP_VERSION}`;
+      setInterval(_checkForNewVersion, VERSION_CHECK_INTERVAL);
+    }
+  }
+
+  // The wall display never reloads on its own, so poll version.js (rewritten
+  // with the build time on every deploy) and reload when it changes.
+  const VERSION_CHECK_INTERVAL = 5 * 60 * 1000;
+
+  async function _checkForNewVersion() {
+    try {
+      const res = await fetch(`version.js?_=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const m = (await res.text()).match(/APP_VERSION\s*=\s*'([^']+)'/);
+      if (!m || m[1] === APP_VERSION) return;
+      // Don't yank the page out from under someone using the settings panel.
+      if (!document.getElementById('settings-panel').classList.contains('hidden')) return;
+      location.reload();
+    } catch (_) {
+      // Offline or file:// — try again next interval.
     }
   }
 

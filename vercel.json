@@ -1,4 +1,4 @@
 {
-  "buildCommand": "echo \"const APP_VERSION = '$(date +%Y-%m-%d)';\" > version.js",
+  "buildCommand": "echo \"const APP_VERSION = '$(TZ=America/Toronto date +'%Y-%m-%d %H:%M')';\" > version.js",
   "outputDirectory": "."
 }
